@@ -11,6 +11,8 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      HAS_NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,6 +24,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
       - run: pnpm exec vitest run
-      - run: pnpm publish --provenance --access public --no-git-checks
+      - if: env.HAS_NPM_TOKEN != 'true'
+        run: echo "NPM_TOKEN secret is not set; skipping the npm publish."
+      - if: env.HAS_NPM_TOKEN == 'true'
+        run: pnpm publish --provenance --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
