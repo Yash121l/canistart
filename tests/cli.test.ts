@@ -111,6 +111,16 @@ describe('canistart binary', () => {
     ]);
   });
 
+  it('exits 0 on a go verdict', async () => {
+    const result = await cli(['soran-ghaderi/torchebm#323', '--no-color'], {
+      CANISTART_FIXTURE_DIR: 'tests/fixtures/soran-ghaderi-torchebm-323',
+      CANISTART_NOW: '2026-09-13T12:00:00Z',
+    });
+    expect(result.code).toBe(0);
+    expect(result.stdout).toMatch(/^GO {2}soran-ghaderi\/torchebm#323 {2}BaseScheduler/);
+    expect(result.stdout).not.toMatch(/\[ x\]|\[ !\]/);
+  });
+
   it('prints the version', async () => {
     const result = await cli(['--version']);
     expect(result.code).toBe(0);

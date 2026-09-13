@@ -1,0 +1,19 @@
+{
+  "number": 298,
+  "title": "feat(samplers): add config-revealing reprs to samplers and integrators",
+  "html_url": "https://github.com/soran-ghaderi/torchebm/pull/298",
+  "state": "open",
+  "locked": false,
+  "created_at": "2026-09-04T04:31:08Z",
+  "updated_at": "2026-09-12T20:35:42Z",
+  "closed_at": null,
+  "merged_at": null,
+  "draft": false,
+  "body": "## Summary\nLosses and couplings implement config-revealing reprs; samplers and\nintegrators did not, so printing a constructed sampler showed only the\ndefault nn.Module dump.\n\n- BaseSampler: fallback repr showing the model type.\n- LangevinDynamics, HamiltonianMonteCarlo, RiemannianManifoldHMC,\n  GradientDescentSampler, NesterovSampler, FlowSampler: override showing\n  their key hyperparameters (step_size, noise_scale, n_leapfrog_steps,\n  mass, metric_fn, momentum, mode, interpolant, prediction, integrator).\n- BaseIntegrator: fallback repr for parameterless integrators.\n- BaseRungeKuttaIntegrator: shows atol/rtol/max_steps only when the\n  subclass defines error_weights (adaptive-capable); fixed-step methods\n  (RK4, RK438, midpoint, heun, ...) stay bare since those tolerances are\n  unused on the fixed-step path.\n- GeneralisedLeapfrogIntegrator: override showing its implicit-solver\n  hyperparameters (solver_max_iter, solver_tol, solver_check_every).\n\nstep_size/noise_scale/etc. are scheduler-backed (`_register_param`\nstores them in `self.schedulers`, not as plain attributes), so the repr\nreads `self.schedulers['step_size']` rather than a nonexistent\n`self.step_size`.\n\n## Test plan\n- [x] Added repr assertions to the existing test file for each touched\n      sampler (test_langevin_dynamics.py, test_hmc.py,\n      test_gradient_descent.py, test_flow.py) and integrator\n      (test_rk4.py, test_dopri5.py, test_symplectic_base.py), including\n      the tensor-mass case for HMC and the adaptive vs. fixed-step split\n      for the RK base.\n- [x] Full test suite passes locally (`pytest tests/`), no failures.\n\nCloses #191",
+  "author_association": "CONTRIBUTOR",
+  "user": {
+    "login": "K-Divyasri"
+  },
+  "assignees": [],
+  "labels": []
+}

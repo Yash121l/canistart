@@ -1,0 +1,28 @@
+{
+  "number": 323,
+  "title": "BaseScheduler has no __repr__, so scheduled parameters print as bare values",
+  "html_url": "https://github.com/soran-ghaderi/torchebm/issues/323",
+  "state": "open",
+  "state_reason": null,
+  "locked": false,
+  "created_at": "2026-09-12T20:27:42Z",
+  "updated_at": "2026-09-12T20:44:55Z",
+  "closed_at": null,
+  "body": "Sampler reprs render scheduler-backed parameters through get_scheduled_value, so a scheduled step_size is indistinguishable from a constant one: LangevinDynamics(model, step_size=CosineScheduler(0.1, 0.001, 100)) prints step_size=0.1.\n\nDone when: BaseScheduler subclasses render their own configuration, sampler reprs show it for scheduled parameters, and a test distinguishes a constant from a schedule.",
+  "author_association": "OWNER",
+  "user": {
+    "login": "soran-ghaderi"
+  },
+  "assignees": [],
+  "labels": [
+    {
+      "name": "enhancement"
+    },
+    {
+      "name": "help wanted"
+    },
+    {
+      "name": "good first issue"
+    }
+  ]
+}

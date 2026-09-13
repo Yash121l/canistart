@@ -1,0 +1,59 @@
+{
+  "workflows": [
+    {
+      "name": "Performance Benchmarks",
+      "path": ".github/workflows/benchmarks.yml",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/blob/master/.github/workflows/benchmarks.yml"
+    },
+    {
+      "name": "Changelog",
+      "path": ".github/workflows/changelog.yml",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/blob/master/.github/workflows/changelog.yml"
+    },
+    {
+      "name": "CI",
+      "path": ".github/workflows/ci.yml",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/blob/master/.github/workflows/ci.yml"
+    },
+    {
+      "name": "docs_ci",
+      "path": ".github/workflows/docs_ci.yml",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/blob/master/.github/workflows/docs_ci.yml"
+    },
+    {
+      "name": "Automated Tagging and Release",
+      "path": ".github/workflows/tag-release.yml",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/blob/master/.github/workflows/tag-release.yml"
+    },
+    {
+      "name": "Copilot code review",
+      "path": "dynamic/copilot-pull-request-reviewer/copilot-pull-request-reviewer",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/actions/workflows/copilot-pull-request-reviewer/copilot-pull-request-reviewer"
+    },
+    {
+      "name": "Copilot coding agent",
+      "path": "dynamic/copilot-swe-agent/copilot",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/actions/workflows/copilot-swe-agent/copilot"
+    },
+    {
+      "name": "Dependabot Updates",
+      "path": "dynamic/dependabot/dependabot-updates",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/actions/workflows/dependabot/dependabot-updates"
+    },
+    {
+      "name": "Dependency Graph",
+      "path": "dynamic/dependabot/update-graph",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/actions/workflows/dependabot/update-graph"
+    },
+    {
+      "name": "CodeQL",
+      "path": "dynamic/github-code-scanning/codeql",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/actions/workflows/github-code-scanning/codeql"
+    },
+    {
+      "name": "pages-build-deployment",
+      "path": "dynamic/pages/pages-build-deployment",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/actions/workflows/pages/pages-build-deployment"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "total_count": 7,
+  "items": [
+    {
+      "number": 325,
+      "title": "Remove ParallelTemperingCD",
+      "html_url": "https://github.com/soran-ghaderi/torchebm/pull/325",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-09-12T21:05:17Z",
+      "updated_at": "2026-09-12T21:05:17Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "## Summary\r\n\r\n- Remove the broken `ParallelTemperingCD` class\r\n- Remove its exports, benchmark entry, and documentation\r\n- Add a regression test confirming it is no longer available\r\n\r\nCloses #322\r\n\r\n## Tests\r\n\r\n- `python -m pytest tests/losses/test_contrastive_divergence.py`\r\n- 18 passed, 9 skipped (CUDA unavailable)",
+      "author_association": "NONE",
+      "user": {
+        "login": "Nagulanvelu"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    }
+  ]
+}

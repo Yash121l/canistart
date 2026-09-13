@@ -1,0 +1,9 @@
+[
+  {
+    "user": {
+      "login": "NspxMiguel"
+    },
+    "author_association": "NONE",
+    "body": "I would like to work on this. I will add configuration-preserving scheduler reprs and update the sampler repr coverage after #298 lands, so the change builds on rather than duplicates that approved PR."
+  }
+]

@@ -85,7 +85,8 @@ export function render(
   for (const check of result.checks) {
     lines.push(`[${MARKERS[check.status]}] ${check.id.padEnd(13)} ${check.summary}`);
     if (check.status === 'warn' || check.status === 'fail') {
-      for (const evidence of check.evidence.slice(0, 2)) lines.push(`     ${evidence.url}`);
+      const urls = [...new Set(check.evidence.map((evidence) => evidence.url))];
+      for (const url of urls.slice(0, 2)) lines.push(`     ${url}`);
     }
   }
   const policy = result.checks.find((check) => check.id === 'policy');

@@ -1,0 +1,382 @@
+[
+  {
+    "number": 316,
+    "title": "feat(losses): time_invariant on equilibrium matching, py.typed, embedder dtype",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/316",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-07T00:38:09Z",
+    "updated_at": "2026-09-07T03:36:15Z",
+    "closed_at": "2026-09-07T03:20:22Z",
+    "merged_at": "2026-09-07T03:20:22Z",
+    "draft": false,
+    "body": "resolves #178\nresolves #302\nresolves #303\nresolves #183\nresolves #290\nresolves #189\nresolves #307\nreferences #186\nreferences #286",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 313,
+    "title": "test(utils): cover profiling helpers",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/313",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-06T14:59:05Z",
+    "updated_at": "2026-09-07T03:13:26Z",
+    "closed_at": "2026-09-07T02:14:04Z",
+    "merged_at": "2026-09-07T02:14:04Z",
+    "draft": false,
+    "body": "## Summary\n\n- test that `profile_context` yields a usable profiler and prints recorded CPU timing data\n- test `record_function` as a decorator and verify it preserves the wrapped return value\n- assert both context-manager and decorator event names reach profiler aggregates\n\n## Validation\n\n- `pytest tests/utils/test_profiling.py -q` (three consecutive runs, 2 passed each)\n- `pytest tests/ -q` (passed, 2 skipped)\n- `black --check tests/utils/test_profiling.py`\n- `isort --check-only tests/utils/test_profiling.py`\n\nCloses #183",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "ryux1"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 309,
+    "title": "fix(losses): Restore per-module training modes",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/309",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-06T14:07:05Z",
+    "updated_at": "2026-09-07T03:13:25Z",
+    "closed_at": "2026-09-07T02:11:40Z",
+    "merged_at": "2026-09-07T02:11:40Z",
+    "draft": false,
+    "body": "## Summary\n\n- preserve every module's training flag before the conditioning probe enters eval mode\n- restore flags directly so intentionally eval-mode children remain in eval mode\n- cover a training parent with an eval-mode child\n\nCloses #303.\n\n## Validation\n\n- `pytest tests/losses/test_condition_probe.py -q`\n- `pytest tests -q` (all passed; 2 expected skips)\n- `git diff --check`",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "ryux1"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 312,
+    "title": "feat(models): add analytic energy landscapes",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/312",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-06T14:43:05Z",
+    "updated_at": "2026-09-07T03:13:02Z",
+    "closed_at": "2026-09-07T03:10:28Z",
+    "merged_at": "2026-09-07T03:10:28Z",
+    "draft": false,
+    "body": "## Summary\n\n- add vectorized Himmelblau and Booth two-dimensional energy models\n- add a dimension-agnostic Styblinski-Tang energy model\n- export all three models through `torchebm.core`\n- cover batched values, dimensional validation, closed-form gradients, and constructor errors\n\n## Validation\n\n- `pytest tests/core/test_base_model.py tests/models/test_constructor_kwargs.py -q` (42 passed)\n- `pytest tests/ -q` (passed, 2 skipped)\n- `black --check` on all four changed files\n- `isort --check-only` on the changed implementation and test files; `torchebm/core/__init__.py` retains its intentional initialization order to avoid circular imports\n\nCloses #189",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "ryux1"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 308,
+    "title": "perf(models): cache timestep frequencies",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/308",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-06T13:43:05Z",
+    "updated_at": "2026-09-07T03:13:02Z",
+    "closed_at": "2026-09-07T03:10:31Z",
+    "merged_at": "2026-09-07T03:10:31Z",
+    "draft": false,
+    "body": "Closes #307.\r\n\r\nCache the `MLPTimestepEmbedder` frequency table once during construction as a non-persistent buffer. `forward()` now reuses that buffer, so it follows module device/dtype conversions without adding a checkpoint key while avoiding the repeated `arange`, scalar arithmetic, and `exp` work.\r\n\r\nThe existing stateless `sinusoidal_embedding()` API remains available for callers that need raw embeddings.\r\n\r\nTests cover:\r\n\r\n- exact float32 output parity with the existing embedding path;\r\n- no `torch.arange` or `torch.exp` call during `forward()`;\r\n- float64 module/input execution;\r\n- buffer registration with unchanged `state_dict()` keys.\r\n\r\nValidation:\r\n\r\n- full `pytest tests -q` suite passed (two repository-declared skips);\r\n- focused embedding and DiT tests passed;\r\n- Black and isort checks passed;\r\n- CPU profiler confirmed no `aten::arange` or `aten::exp` operation in `forward()`;\r\n- mypy reports ten existing errors in other component files and no error in this change.",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "ryux1"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 291,
+    "title": "trimmed_mean: use topk instead of a full sort",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/291",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-03T16:17:35Z",
+    "updated_at": "2026-09-07T03:11:39Z",
+    "closed_at": "2026-09-07T03:11:39Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Summary\ntrimmed_mean sorted the entire tensor just to discard the top k largest\nentries before averaging. Since we only need the set of kept values (not\na full ordering), torch.topk(values, n - k, largest=False) gets the same\nresult without the full sort.\n\n## Test plan\n- [x] Existing trimmed_mean test in tests/losses/test_energy_matching.py passes\n- [x] Full test_energy_matching.py suite passes (28 passed, 3 skipped - no CUDA)\n\nCloses #290",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "K-Divyasri"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 311,
+    "title": "perf(losses): use topk for trimmed mean",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/311",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-06T14:35:43Z",
+    "updated_at": "2026-09-07T03:11:36Z",
+    "closed_at": "2026-09-07T03:10:25Z",
+    "merged_at": "2026-09-07T03:10:25Z",
+    "draft": false,
+    "body": "## Summary\n\n- select only the retained values with `torch.topk`\n- avoid fully sorting the input for the one-sided trimmed mean\n- preserve the existing zero-trim fast path and result semantics\n\n## Validation\n\n- `pytest tests/losses/test_energy_matching.py -q`\n- `pytest tests/ -q`\n- `black --check torchebm/losses/loss_utils.py`\n- `isort --check-only torchebm/losses/loss_utils.py`\n\nCloses #290",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "ryux1"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 235,
+    "title": "docs(integrators): fix implicit solver parameter docs",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/235",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-07-14T14:05:23Z",
+    "updated_at": "2026-09-07T01:42:07Z",
+    "closed_at": "2026-09-07T01:42:07Z",
+    "merged_at": "2026-09-07T01:42:07Z",
+    "draft": false,
+    "body": "## Summary\r\n\r\n- replace the stale `max_iter` docstring parameter with the inherited `solver_max_iter` name\r\n- document the actual `solver_tol` and `solver_check_every` early-exit behavior\r\n- clarify that `atol` applies to adaptive stepping, not the implicit solve\r\n\r\nPart of #186.\r\n\r\n## Validation\r\n\r\n- standard-library regression check: the base revision fails because `max_iter` is absent from the inherited signature; this revision passes with all documented parameters present\r\n- `python -m griffe dump -s . -d google -L WARNING torchebm.integrators.euler_maruyama`\r\n- `black --check torchebm/integrators/euler_maruyama.py`\r\n- `isort --check-only torchebm/integrators/euler_maruyama.py`\r\n- `git diff --check`\r\n- independent diff and inherited-signature review\r\n\r\nThe [base documentation run](https://github.com/soran-ghaderi/torchebm/actions/runs/29221974157) reports the two targeted Griffe warnings for `max_iter`: it has no type or annotation and does not appear in the function signature.\r\n\r\nThe full MkDocs and pytest suites were not run locally because the isolated checkout does not include Torch or the complete documentation dependency stack. GitHub Actions can exercise the repository-managed environments.\r\n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "sapunyangkut"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 306,
+    "title": "fix(models): respect timestep embedder dtype",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/306",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-06T06:44:07Z",
+    "updated_at": "2026-09-07T00:41:08Z",
+    "closed_at": "2026-09-07T00:41:08Z",
+    "merged_at": "2026-09-07T00:41:08Z",
+    "draft": false,
+    "body": "## Summary\n\n- cast the sinusoidal timestep table to the MLP weight dtype before the first linear layer\n- preserve the existing float32 output exactly\n- add regression coverage for float64 forward passes\n\n## Testing\n\n- `python -m pytest tests/models/components/test_embeddings.py -q`\n- `python -m pytest tests/ -v` (1756 passed, 80 skipped, 21 deselected)\n\nCloses #302\n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "KevinAndrewDong"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 297,
+    "title": "build(packaging): ship py.typed marker for PEP 561 compliance",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/297",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-04T04:11:58Z",
+    "updated_at": "2026-09-07T00:37:42Z",
+    "closed_at": "2026-09-07T00:37:42Z",
+    "merged_at": "2026-09-07T00:37:42Z",
+    "draft": false,
+    "body": "## Summary\nThe package is fully annotated but had no py.typed marker, so mypy/pyright\ntreated torchebm as untyped downstream. Added torchebm/py.typed and\nregistered it under [tool.setuptools.package-data] so it ships in the wheel.\n\n## Test plan\n- [x] Built the wheel locally and confirmed torchebm/py.typed is present in it\n- [x] Installed the built wheel and ran mypy --strict against a script importing\n      from torchebm; it now resolves the real signature instead of treating\n      the package as untyped\n\nCloses #178",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "K-Divyasri"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 285,
+    "title": "feat(losses): model_time on equilibrium matching and negate_velocity on flow matching",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/285",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-02T02:19:29Z",
+    "updated_at": "2026-09-02T02:25:51Z",
+    "closed_at": "2026-09-02T02:25:25Z",
+    "merged_at": "2026-09-02T02:25:25Z",
+    "draft": false,
+    "body": "EquilibriumMatchingLoss gains model_time ('zero' default, 'true', or a callable t -> t') controlling the clock shown to the model at the training call and in the conditioning probe, restoring time-conditioned training. FlowMatchingLoss gains negate_velocity so a field trained with it drops into the descent samplers and EqMEnergy; with ct='constant', ct_multiplier=1 and model_time='true' the two objectives are bit-identical, which is pinned by tests. The field-sign and clock conventions of both losses are tabulated in the objectives concept page. Deprecation since stamps are corrected to the 0.8.5 release that shipped the warnings.\n\nresolves #283\nresolves #284",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 282,
+    "title": "feat(models): standard backbones: dit presets, time-conditioned mlp, ema, latent wrapper",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/282",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-01T22:43:22Z",
+    "updated_at": "2026-09-01T22:53:28Z",
+    "closed_at": "2026-09-01T22:53:10Z",
+    "merged_at": "2026-09-01T22:53:10Z",
+    "draft": false,
+    "body": "DiT with canonical S/B/L/XL presets and reference-exact init, a TimeConditionedMLP with adaLN-Zero and concat conditioning, an EMA helper, and a LatentWrapper for latent-space training around a user-supplied autoencoder. No pretrained weights are hosted.\n\nresolves #272\nresolves #273\nresolves #274\nresolves #275\nresolves #276",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 281,
+    "title": "ci(release): use changelog section as github release body",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/281",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-01T01:18:16Z",
+    "updated_at": "2026-09-01T01:43:22Z",
+    "closed_at": "2026-09-01T01:43:14Z",
+    "merged_at": "2026-09-01T01:43:14Z",
+    "draft": false,
+    "body": "GitHub Releases created since v0.6.0 only carry the auto-generated PR list, one line per release under the one-PR-per-release flow. The release job now extracts the minted tag's section from CHANGELOG.md as the release body, with the generated notes appended; an empty extract falls back to generated notes alone.",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 280,
+    "title": "ci(release): local changelog automation and publish on every master merge",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/280",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-01T00:31:22Z",
+    "updated_at": "2026-09-01T01:00:14Z",
+    "closed_at": "2026-09-01T01:00:05Z",
+    "merged_at": "2026-09-01T01:00:05Z",
+    "draft": false,
+    "body": "Every master merge now publishes the minted tag to PyPI and GitHub Releases (the #release gate is removed). CHANGELOG.md is no longer written by CI pushes to master, which the ruleset rejects: a new changelog workflow promotes each PR's own version section onto the PR branch, versioned as the merge will mint (patch by default, minor/ major in the PR title). Also backfills the 0.8.0 and 0.8.2 sections the rejected pushes dropped, and removes the redundant manual-tag PyPI publisher.",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 271,
+    "title": "feat(losses): interpolant-loss shared base, flow matching, and model kwargs guard",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/271",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-30T02:08:06Z",
+    "updated_at": "2026-08-30T02:25:27Z",
+    "closed_at": "2026-08-30T02:25:20Z",
+    "merged_at": "2026-08-30T02:25:20Z",
+    "draft": false,
+    "body": "Extracts an internal BaseInterpolantLoss owning the shared interpolant-loss skeleton (interpolant/coupling resolution, train_eps interval, t_sampler with the EDM lognormal skew, per-timestep loss_weight_fn, and the conditioning pipeline), with EquilibriumMatchingLoss and EnergyMatchingLoss on top; EnergyMatching gains t_sampler and loss_weight_fn. Adds FlowMatchingLoss, the standard conditional flow matching objective, pinned by a value-and-gradient equivalence test against EquilibriumMatchingLoss(ct='constant', ct_multiplier=1) and covered by every cross-loss capability suite. BaseModel constructors now reject unknown kwargs with a TypeError listing the supported parameters and installed version, matching the loss-side behavior.\n\nresolves #265 resolves #266 resolves #267 resolves #268 resolves #269",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 270,
+    "title": "feat(conditioning): class-conditional training and classifier-free guidance",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/270",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-29T23:59:44Z",
+    "updated_at": "2026-08-30T00:20:09Z",
+    "closed_at": "2026-08-30T00:20:01Z",
+    "merged_at": "2026-08-30T00:20:01Z",
+    "draft": false,
+    "body": "Explicit y= conditioning on all loss forwards and sampler sample() methods (shorthand for model_kwargs={'y': ...}; ambiguous double-passing raises). Classifier-free guidance: cfg_dropout label dropout on every loss with a pluggable null condition (int num_classes convention, tensor null embedding, or callable), and a ClassifierFreeGuidance wrapper computing uncond + w*(cond - uncond) in one 2x-batched forward, usable by FlowSampler and every gradient-based sampler; optional guide_channels leaves non-guided output channels (e.g. learned sigma) untouched. A first-conditional-call probe raises if the backbone silently ignores y, with a check_conditioning opt-out.\n\nBREAKING: LabelClassifierFreeGuidance is replaced by ClassifierFreeGuidance (the old wrapper returned the conditional output for cfg_scale <= 1 and used two forward passes). Migration: LabelClassifierFreeGuidance(m, null_label_id=N, cfg_scale=w, guide_channels=c) -> ClassifierFreeGuidance(m, guidance_scale=w, null_condition=N, guide_channels=c).\n\nresolves #260 resolves #261 resolves #262 resolves #263",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 264,
+    "title": "  feat(losses): flow matching endpoint and loss api hygiene ",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/264",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-28T04:59:50Z",
+    "updated_at": "2026-08-28T14:51:59Z",
+    "closed_at": "2026-08-28T14:51:49Z",
+    "merged_at": "2026-08-28T14:51:49Z",
+    "draft": false,
+    "body": "Loss constructors reject unknown kwargs with a TypeError listing the supported parameters and the installed version, instead of the bare nn.Module error.\r\n\r\nEquilibriumMatchingLoss gains a pluggable c(t) weight family (truncated, linear, constant, or a callable; constant with unit multiplier is exactly the negated Flow Matching objective, pinned by a value-and-gradient test against a reference FM implementation), the EDM lognormal timestep skew via t_sampler with a callable escape hatch, and a per-timestep loss weight hook loss_weight_fn(t) for min-SNR / EDM-lambda style weightings. Truncated-decay threshold endpoints now raise a clear ValueError instead of ZeroDivisionError.\r\n\r\nEqM is time-invariant end to end: the loss always conditions the model on zeroed time, and FlowSampler(negate_velocity=True) now does the same during sampling (previously it passed the integration clock; the SDE score path also derived the score from the un-negated field and is fixed to use v = -f).\r\n\r\nresolves #253, resolves #254, resolves #255, resolves #256, resolves #257",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 259,
+    "title": "feat(distributed): fsdp2-native components, nccl-validated",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/259",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-21T00:59:09Z",
+    "updated_at": "2026-08-21T01:11:25Z",
+    "closed_at": "2026-08-21T01:11:20Z",
+    "merged_at": "2026-08-21T01:11:20Z",
+    "draft": false,
+    "body": "Component-level distributed compatibility across the library: guarded process-group helpers and a multi-process test harness, a functional score path for DTensor-sharded models with optimizer-ready gradients, per-call generator RNG, FSDP2-transparent energy models and samplers with an unsharded() context for k-step MCMC, rank-local PCD replay buffers with opt-in cross-rank mixing, process-group-aware global-batch Sinkhorn coupling, fail-fast guards for second-order objectives under sharded parameters, EMA and distributed-checkpoint verification, and a distributed integration guide. The full distributed suite passes under NCCL with one process per GPU on 4x H200, including 138M-parameter contrastive-divergence and functional-DSM training-step benchmarks in fp32 and bf16.\n\nresolves #243\nresolves #244\nresolves #245\nresolves #246\nresolves #210\nresolves #247\nresolves #248\nresolves #249\nresolves #242",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 258,
+    "title": "feat(distributed): fsdp2-compatible components: shim, functional score path, generator rng, sharded models",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/258",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-17T02:21:14Z",
+    "updated_at": "2026-08-17T02:38:00Z",
+    "closed_at": "2026-08-17T02:33:11Z",
+    "merged_at": "2026-08-17T02:33:11Z",
+    "draft": false,
+    "body": "Component-level distributed compatibility, first four phases: guarded process-group helpers + gloo test harness, functional score path for DTensor-sharded models, per-call generator threading through all stochastic paths, and an unsharded() context manager with FSDP2 energy-model parity tests.\n\nresolves #243\nresolves #244\nresolves #245\nresolves #246",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 156,
+    "title": "Sampler integrator",
+    "html_url": "https://github.com/soran-ghaderi/torchebm/pull/156",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-07-09T03:55:33Z",
+    "updated_at": "2026-07-21T00:33:17Z",
+    "closed_at": "2026-07-09T04:03:22Z",
+    "merged_at": "2026-07-09T04:03:21Z",
+    "draft": false,
+    "body": "closes #152\r\n\r\n",
+    "author_association": "OWNER",
+    "user": {
+      "login": "soran-ghaderi"
+    },
+    "assignees": [],
+    "labels": []
+  }
+]

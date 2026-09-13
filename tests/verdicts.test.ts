@@ -38,6 +38,10 @@ async function verdict(target: string, agent = false): Promise<string> {
 }
 
 describe('recorded issues', () => {
+  it('goes on soran-ghaderi/torchebm#323, a fresh issue nobody has claimed', async () => {
+    await expect(verdict('soran-ghaderi/torchebm#323')).resolves.toBe('GO');
+  });
+
   it('stops on cline/cline#4932, which has five open competing pull requests', async () => {
     await expect(verdict('cline/cline#4932')).resolves.toBe('STOP');
   });
