@@ -34,6 +34,13 @@ GO  soran-ghaderi/torchebm#323  BaseScheduler has no __repr__, so scheduled para
 [ok] repo_health   Repo merges outside work: 95% merge rate, last outside merge 6 days ago.
 ```
 
+## Field test
+
+On 2026-09-13 I ran it over the six newest `help wanted` issues in prettier, the six newest
+`good first issue` issues in Apache Airflow, and the one `help wanted` issue in Vitest.
+Thirteen of thirteen came back STOP. Every one already had between one and three open pull
+requests that the issue page did not show.
+
 ## Why
 
 I spent two days picking issues to contribute to. Out of twelve candidates, three were
