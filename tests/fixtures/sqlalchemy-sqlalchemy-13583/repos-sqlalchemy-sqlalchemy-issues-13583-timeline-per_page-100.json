@@ -1,0 +1,34 @@
+[
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 13582,
+        "html_url": "https://github.com/sqlalchemy/sqlalchemy/issues/13582",
+        "state": "open",
+        "repository": {
+          "full_name": "sqlalchemy/sqlalchemy"
+        },
+        "pull_request": null
+      }
+    }
+  },
+  {
+    "event": "referenced",
+    "commit_id": "791df4667633a13a406e31346738eb804218940c"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "62e7de3e5c00ee2f772470cbbdeadd83c43b412b"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "552093c19c3bdfc5e3451e5b39f50e2a79caa79b"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "3d51a6b47610c97965f54c5de7475429bc0e3953"
+  }
+]

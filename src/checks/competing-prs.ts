@@ -1,5 +1,6 @@
 import type { ApiPull, ApiSearchResult, ApiTimelineEvent } from '../api-types.js';
 import { referencesIssue } from '../reference.js';
+import { count } from '../text.js';
 import type { CheckContext, CheckResult, Evidence } from '../types.js';
 
 const MAX_PULLS = 15;
@@ -79,7 +80,7 @@ export async function checkCompetingPrs(ctx: CheckContext): Promise<CheckResult>
     return {
       id: 'competing_prs',
       status: 'fail',
-      summary: `${open.length} open pull request${open.length === 1 ? '' : 's'} already targets this issue.`,
+      summary: `${count(open.length, 'open pull request')} already ${open.length === 1 ? 'targets' : 'target'} this issue.`,
       evidence,
       blocks_agents: false,
     };
@@ -88,7 +89,7 @@ export async function checkCompetingPrs(ctx: CheckContext): Promise<CheckResult>
     return {
       id: 'competing_prs',
       status: 'warn',
-      summary: `${closed.length} closed, unmerged pull request${closed.length === 1 ? '' : 's'} tried this before.`,
+      summary: `${count(closed.length, 'closed, unmerged pull request')} tried this before.`,
       evidence,
       blocks_agents: false,
     };

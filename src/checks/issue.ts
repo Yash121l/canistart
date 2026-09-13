@@ -1,4 +1,5 @@
 import type { ApiComment, ApiIssue } from '../api-types.js';
+import { count } from '../text.js';
 import type { CheckContext, CheckResult, Evidence } from '../types.js';
 
 const BLOCKING_LABELS = [
@@ -71,12 +72,12 @@ export async function checkIssue({ client, ref, now }: CheckContext): Promise<Ch
   const age = daysBetween(issue.created_at, now);
   if (age > YEAR_DAYS) {
     warnings.push('open for over a year');
-    evidence.push({ text: `open for ${age} days`, url });
+    evidence.push({ text: `open for ${count(age, 'day')}`, url });
   }
   const idle = daysBetween(issue.updated_at, now);
   if (idle > DORMANT_DAYS) {
     warnings.push('dormant');
-    evidence.push({ text: `no activity for ${idle} days`, url });
+    evidence.push({ text: `no activity for ${count(idle, 'day')}`, url });
   }
   if (!acknowledged) {
     warnings.push('no maintainer reply');
@@ -89,7 +90,7 @@ export async function checkIssue({ client, ref, now }: CheckContext): Promise<Ch
   return {
     id: 'issue',
     status: 'pass',
-    summary: `Issue is open, unassigned and ${age} days old.`,
+    summary: `Issue is open, unassigned and ${count(age, 'day')} old.`,
     evidence,
     blocks_agents: false,
   };

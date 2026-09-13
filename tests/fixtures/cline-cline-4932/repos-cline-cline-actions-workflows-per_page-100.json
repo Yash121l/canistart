@@ -1,0 +1,179 @@
+{
+  "workflows": [
+    {
+      "name": "Dependabot Updates",
+      "path": "dynamic/dependabot/dependabot-updates",
+      "html_url": "https://github.com/cline/cline/actions/workflows/dependabot/dependabot-updates"
+    },
+    {
+      "name": "CodeQL",
+      "path": "dynamic/github-code-scanning/codeql",
+      "html_url": "https://github.com/cline/cline/actions/workflows/github-code-scanning/codeql"
+    },
+    {
+      "name": "Copilot cloud agent",
+      "path": "dynamic/copilot-swe-agent/copilot",
+      "html_url": "https://github.com/cline/cline/actions/workflows/copilot-swe-agent/copilot"
+    },
+    {
+      "name": "Copilot code review",
+      "path": "dynamic/copilot-pull-request-reviewer/copilot-pull-request-reviewer",
+      "html_url": "https://github.com/cline/cline/actions/workflows/copilot-pull-request-reviewer/copilot-pull-request-reviewer"
+    },
+    {
+      "name": "Dependency Graph",
+      "path": "dynamic/dependabot/update-graph",
+      "html_url": "https://github.com/cline/cline/actions/workflows/dependabot/update-graph"
+    },
+    {
+      "name": "sdk-test",
+      "path": ".github/workflows/sdk-test.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/sdk-test.yml"
+    },
+    {
+      "name": "ext-vscode-test",
+      "path": ".github/workflows/ext-vscode-test.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/ext-vscode-test.yml"
+    },
+    {
+      "name": "ext-vscode-test-e2e",
+      "path": ".github/workflows/ext-vscode-test-e2e.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/ext-vscode-test-e2e.yml"
+    },
+    {
+      "name": "cli-publish",
+      "path": ".github/workflows/cli-publish.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/cli-publish.yml"
+    },
+    {
+      "name": "ext-jb-test-integration",
+      "path": ".github/workflows/ext-jb-test-integration.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/ext-jb-test-integration.yml"
+    },
+    {
+      "name": "ext-vscode-publish-nightly",
+      "path": ".github/workflows/ext-vscode-publish-nightly.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/ext-vscode-publish-nightly.yml"
+    },
+    {
+      "name": "ext-vscode-publish-stable",
+      "path": ".github/workflows/ext-vscode-publish-stable.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/ext-vscode-publish-stable.yml"
+    },
+    {
+      "name": "repo-label-issues",
+      "path": ".github/workflows/repo-label-issues.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/repo-label-issues.yml"
+    },
+    {
+      "name": "repo-stale-issues",
+      "path": ".github/workflows/repo-stale-issues.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/repo-stale-issues.yml"
+    },
+    {
+      "name": "sdk-publish",
+      "path": ".github/workflows/sdk-publish.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/sdk-publish.yml"
+    },
+    {
+      "name": "Copilot",
+      "path": "dynamic/agents/copilot-pull-request-reviewer",
+      "html_url": "https://github.com/cline/cline/actions/workflows/agents/copilot-pull-request-reviewer"
+    },
+    {
+      "name": "ext-vscode-publish-legacy",
+      "path": ".github/workflows/ext-vscode-publish-legacy.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/ext-vscode-publish-legacy.yml"
+    },
+    {
+      "name": "Run Datadog Synthetic tests",
+      "path": ".github/workflows/datadog-synthetics.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/datadog-synthetics.yml"
+    },
+    {
+      "name": "ext-vscode-ab-package",
+      "path": ".github/workflows/ext-vscode-ab-package.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/ext-vscode-ab-package.yml"
+    },
+    {
+      "name": "ui-publish",
+      "path": ".github/workflows/ui-publish.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/ui-publish.yml"
+    },
+    {
+      "name": "desktop-publish",
+      "path": ".github/workflows/desktop-publish.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/desktop-publish.yml"
+    },
+    {
+      "name": "repo-strip-agent-badges",
+      "path": ".github/workflows/repo-strip-agent-badges.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/repo-strip-agent-badges.yml"
+    },
+    {
+      "name": "repo-delete-agent-promo-comments",
+      "path": ".github/workflows/repo-delete-agent-promo-comments.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/repo-delete-agent-promo-comments.yml"
+    },
+    {
+      "name": "docs-link-check",
+      "path": ".github/workflows/docs-link-check.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/docs-link-check.yml"
+    },
+    {
+      "name": "repo-label-prs-area",
+      "path": ".github/workflows/repo-label-prs-area.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/repo-label-prs-area.yml"
+    },
+    {
+      "name": "drive-ci",
+      "path": ".github/workflows/drive-ci.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/drive-ci.yml"
+    },
+    {
+      "name": "repo-label-prs-ci",
+      "path": ".github/workflows/repo-label-prs-ci.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/repo-label-prs-ci.yml"
+    },
+    {
+      "name": "ci-label-overrides",
+      "path": ".github/workflows/ci-label-overrides.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/ci-label-overrides.yml"
+    },
+    {
+      "name": "desktop-test",
+      "path": ".github/workflows/desktop-test.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/desktop-test.yml"
+    },
+    {
+      "name": "Changeset Converter",
+      "path": ".github/workflows/changeset-converter.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/changeset-converter.yml"
+    },
+    {
+      "name": "E2E Tests",
+      "path": ".github/workflows/e2e.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/e2e.yml"
+    },
+    {
+      "name": "Build Extension",
+      "path": ".github/workflows/build.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/build.yml"
+    },
+    {
+      "name": "Docker Build",
+      "path": ".github/workflows/docker-build.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/docker-build.yml"
+    },
+    {
+      "name": "PR Code Review",
+      "path": ".github/workflows/pr-review.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/pr-review.yml"
+    },
+    {
+      "name": "CLI Tests",
+      "path": ".github/workflows/cli-tests.yml",
+      "html_url": "https://github.com/cline/cline/blob/main/.github/workflows/cli-tests.yml"
+    }
+  ]
+}

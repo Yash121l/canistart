@@ -1,0 +1,27 @@
+{
+  "total_count": 2,
+  "items": [
+    {
+      "number": 652,
+      "title": "refactor: type `Labels` as a chained label set",
+      "html_url": "https://github.com/meriyah/meriyah/pull/652",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-09-12T19:09:39Z",
+      "updated_at": "2026-09-13T01:47:54Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "`Labels` was `export type Labels = any`, so nothing in the label-set walk was checked. Neither the shape of the sets the parser builds nor the keys the helpers read off them. `isValidLabel` and `validateAndDeclareLabel` took `labels: any` on top of that.\n\nI typed it as the object the parser actually builds. `$` links to the label set of the enclosing statement, `loop` is set only by `parseIterationStatementBody` to mark an iteration statement body's set, and a declared label is keyed by `$` followed by its name. The template literal index signature is the reason to prefer this over a plain `[key: string]` signature: it rejects keys that are not `$`-prefixed, which is the invariant the two helpers rely on.\n\nThe only runtime-adjacent change is that the three lookups index with a template literal instead of `'$' + name`, because a pattern index signature cannot be indexed by a plain `string`. The keys produced are identical, so there is no behaviour change and no snapshot moved.\n\nI checked that the type fails on misuse rather than just passing: `labels.loop = 2`, `labels['plain' + name]`, `labels.$ = 1` and passing a string to `isValidLabel` each produce a compile error (TS2322, TS7053, TS2322, TS2345). All four compiled silently under `any`.\n\n`vitest run` is 91949 passing over 139 files. `tsc`, `eslint`, `prettier --check`, `cspell` and `knip` are clean. The ast alignment and jsx alignment suites pass against test262 at `77100523`.\n\nFixes #650\n",
+      "author_association": "NONE",
+      "user": {
+        "login": "Yash121l"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    }
+  ]
+}

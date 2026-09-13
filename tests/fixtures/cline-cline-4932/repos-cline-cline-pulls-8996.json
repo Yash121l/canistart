@@ -1,0 +1,19 @@
+{
+  "number": 8996,
+  "title": "fix: use correct ARIA roles for Plan/Act mode toggle accessibility",
+  "html_url": "https://github.com/cline/cline/pull/8996",
+  "state": "closed",
+  "locked": false,
+  "created_at": "2026-01-31T15:56:45Z",
+  "updated_at": "2026-08-06T21:30:46Z",
+  "closed_at": "2026-08-06T21:30:45Z",
+  "merged_at": null,
+  "draft": false,
+  "body": "## Summary\n- Fixes #4932\n- Changed the Plan/Act mode toggle from `role=\"switch\"` to proper radio button semantics\n- Screen readers now correctly announce the toggle state (e.g., \"Plan, radio button, checked\")\n\n## Changes\n1. Added `role=\"radiogroup\"` to the SwitchContainer (the parent element)\n2. Changed individual Plan/Act options from `role=\"switch\"` to `role=\"radio\"`\n3. Added missing `key` prop to mapped elements\n\n## Why radio instead of switch?\n- `role=\"switch\"` is semantically for binary on/off toggles (like a checkbox)\n- `role=\"radio\"` within a `role=\"radiogroup\"` is for mutually exclusive options\n- Plan and Act are mutually exclusive options, making radio semantics more appropriate\n\n## Test plan\n- [x] Verified compilation passes (`npm run compile`)\n- [ ] Manual test with screen reader (VoiceOver/NVDA): navigate to Plan/Act toggle, verify it announces \"Plan, radio button, checked\" or \"Act, radio button, not checked\"\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n<!-- ELLIPSIS_HIDDEN -->\n\n----\n\n> [!IMPORTANT]\n> Fix accessibility of Plan/Act toggle by using correct ARIA roles and address minor UI and path handling issues.\n> \n>   - **Accessibility**:\n>     - Change `role` of Plan/Act mode toggle in `ChatTextArea.tsx` from `switch` to `radio` within a `radiogroup`.\n>     - Add `key` prop to mapped elements in `ChatTextArea.tsx`.\n>   - **Path Handling**:\n>     - Replace `string.includes()` with `isLocatedInPath()` in `getReadablePath()` in `path.ts` to fix false positives.\n>   - **UI Fixes**:\n>     - Fix delete button visibility for favorited items in `HistoryViewItem.tsx`.\n>     - Fix star button alignment for long prompts in `HistoryViewItem.tsx`.\n> \n> <sup>This description was created by </sup>[<img alt=\"Ellipsis\" src=\"https://img.shields.io/badge/Ellipsis-blue?color=175173\">](https://www.ellipsis.dev?ref=cline%2Fcline&utm_source=github&utm_medium=referral)<sup> for 1168611b20781c131fe2aed28e9806de9f74ee42. You can [customize](https://app.ellipsis.dev/cline/settings/summaries) this summary. It will automatically update as commits are pushed.</sup>\n\n<!-- ELLIPSIS_HIDDEN -->",
+  "author_association": "CONTRIBUTOR",
+  "user": {
+    "login": "YuriNachos"
+  },
+  "assignees": [],
+  "labels": []
+}

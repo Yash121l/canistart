@@ -1,0 +1,29 @@
+{
+  "workflows": [
+    {
+      "name": "Create wheel",
+      "path": ".github/workflows/create-wheels.yaml",
+      "html_url": "https://github.com/sqlalchemy/sqlalchemy/blob/main/.github/workflows/create-wheels.yaml"
+    },
+    {
+      "name": "Run tests on a pr",
+      "path": ".github/workflows/run-on-pr.yaml",
+      "html_url": "https://github.com/sqlalchemy/sqlalchemy/blob/main/.github/workflows/run-on-pr.yaml"
+    },
+    {
+      "name": "Run tests",
+      "path": ".github/workflows/run-test.yaml",
+      "html_url": "https://github.com/sqlalchemy/sqlalchemy/blob/main/.github/workflows/run-test.yaml"
+    },
+    {
+      "name": "Dependabot Updates",
+      "path": "dynamic/dependabot/dependabot-updates",
+      "html_url": "https://github.com/sqlalchemy/sqlalchemy/actions/workflows/dependabot/dependabot-updates"
+    },
+    {
+      "name": "Dependency Graph",
+      "path": "dynamic/dependabot/update-graph",
+      "html_url": "https://github.com/sqlalchemy/sqlalchemy/actions/workflows/dependabot/update-graph"
+    }
+  ]
+}

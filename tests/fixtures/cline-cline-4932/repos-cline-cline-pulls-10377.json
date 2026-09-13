@@ -1,0 +1,19 @@
+{
+  "number": 10377,
+  "title": "fix: expose Plan/Act mode as an accessible radio group",
+  "html_url": "https://github.com/cline/cline/pull/10377",
+  "state": "open",
+  "locked": false,
+  "created_at": "2026-04-23T17:46:01Z",
+  "updated_at": "2026-07-31T00:13:33Z",
+  "closed_at": null,
+  "merged_at": null,
+  "draft": false,
+  "body": "## Summary\n\nFixes #4932.\n\nThis updates the Plan/Act mode picker in the chat composer so assistive technologies see it as a proper radio group instead of generic clickable controls.\n\n## What changed\n\n- refactored the mode-switch handler to support selecting an explicit target mode\n- rendered Plan and Act as `role=\"radio\"` options inside a `radiogroup`\n- added keyboard support for Enter/Space and arrow-key selection\n- added a focused webview test covering accessibility roles and selecting Act mode\n\n## Validation\n\n- `cd webview-ui && npm test -- ChatTextArea.spec.tsx`\n- `cd webview-ui && npx tsc --noEmit`\n- `npx biome check webview-ui/src/components/chat/ChatTextArea.tsx webview-ui/src/components/chat/__tests__/ChatTextArea.spec.tsx --diagnostic-level=error`\n\n## Notes\n\nI only ran targeted validation for the affected webview surface. The repo's full proto generation flow currently requires Rosetta on Apple Silicon, so I avoided claiming a full-project build/test pass that I did not run.\n",
+  "author_association": "NONE",
+  "user": {
+    "login": "toby-bridges"
+  },
+  "assignees": [],
+  "labels": []
+}

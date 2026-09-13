@@ -1,0 +1,27 @@
+{
+  "total_count": 31,
+  "items": [
+    {
+      "number": 13588,
+      "title": "Reflect PostgreSQL index validity separately from DDL options",
+      "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13588",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-09-12T11:10:48Z",
+      "updated_at": "2026-09-12T14:25:45Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "Fixes #13577. PostgreSQL retains invalid indexes after a failed concurrent build, but reflection currently reports them like valid indexes.\n\nRead `indisvalid` and report `postgresql_not_valid=True` for invalid indexes. The shared `SchemaConst.IGNORE_OPTION` marker separates reflected state from DDL options, exposing it through `index.dialect_options[\"postgresql\"].reflected` on reflected tables.\n\nMarked constructor keywords are accepted and discarded because Alembic builds `Index` objects directly from Inspector results. This keeps the flag out of `dialect_kwargs` and generated migrations. Index validity remains informational, including for active builds and partitioned indexes awaiting attachments.\n",
+      "author_association": "NONE",
+      "user": {
+        "login": "HardMax71"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 2,
+        "html_url": "https://github.com/litestar-org/litestar-piccolo/pull/2",
+        "state": "open",
+        "repository": {
+          "full_name": "litestar-org/litestar-piccolo"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  }
+]

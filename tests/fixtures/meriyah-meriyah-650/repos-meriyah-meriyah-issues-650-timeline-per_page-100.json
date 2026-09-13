@@ -1,0 +1,36 @@
+[
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 85,
+        "html_url": "https://github.com/lvalue-dev/github-issue-tracker/issues/85",
+        "state": "open",
+        "repository": {
+          "full_name": "lvalue-dev/github-issue-tracker"
+        },
+        "pull_request": null
+      }
+    }
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 652,
+        "html_url": "https://github.com/meriyah/meriyah/pull/652",
+        "state": "open",
+        "repository": {
+          "full_name": "meriyah/meriyah"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,390 @@
+[
+  {
+    "number": 13589,
+    "title": "docs: remove duplicate 'a' in insertmanyvalues sentinel docs",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13589",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-12T17:55:51Z",
+    "updated_at": "2026-09-12T17:55:55Z",
+    "closed_at": "2026-09-12T17:55:55Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Summary\n- Remove duplicate word in the insertmanyvalues sentinel column docs: \"with a a client side\" → \"with a client side\".\n\n## Test plan\n- [x] Confirmed the surrounding sentence still reads correctly after the change.",
+    "author_association": "NONE",
+    "user": {
+      "login": "mrchatam"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13473,
+    "title": "docs: add asyncio testing fixtures",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13473",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-07-31T10:13:16Z",
+    "updated_at": "2026-09-08T18:14:35Z",
+    "closed_at": "2026-09-08T18:14:35Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Fixes #10094\n\nAdd a testing section showing session-scoped engine setup and per-test `AsyncSession` fixtures. The example uses an outer transaction and `join_transaction_mode=\"create_savepoint\"` to keep each test isolated.",
+    "author_association": "NONE",
+    "user": {
+      "login": "Whning0513"
+    },
+    "assignees": [],
+    "labels": [
+      {
+        "name": "documentation"
+      }
+    ]
+  },
+  {
+    "number": 13571,
+    "title": "fix: implement SQLiteDialect.get_table_options to reflect STRICT and WITHOUT ROWID",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13571",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-08T04:41:59Z",
+    "updated_at": "2026-09-08T04:42:04Z",
+    "closed_at": "2026-09-08T04:42:04Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Summary\n\nSQLite reflection did not implement `get_table_options()`, causing `NotImplementedError` when calling `Inspector.get_table_options()` on any SQLite table. It also did not populate `Table.kwargs` with `sqlite_strict`/`sqlite_with_rowid`, so round-tripping `STRICT`/`WITHOUT ROWID` tables through reflection silently dropped both modifiers.\n\n## Root Cause\n\n`SQLiteDialect` inherits the base `NotImplementedError`-raising stub from `DefaultDialect`. The `get_columns()` implementation has a regex that strips `WITHOUT ROWID`/`STRICT` from the `CREATE TABLE` text but discards the information entirely.\n\n## Fix\n\nImplement `get_table_options()` that fetches the `CREATE TABLE` SQL via `_get_table_sql()` and extracts trailing `STRICT`/`WITHOUT ROWID` modifiers, returning them as `{'sqlite_strict': True}` and/or `{'sqlite_with_rowid': True}`.\n\n```python\n# Verification\n>>> import sqlalchemy as sa\n>>> e = sa.create_engine(\"sqlite://\")\n>>> with e.begin() as conn:\n...     conn.exec_driver_sql(\n...         'CREATE TABLE \"t\" (id INTEGER NOT NULL, PRIMARY KEY (id)) '\n...         'WITHOUT ROWID, STRICT'\n...     )\n>>> meta = sa.MetaData()\n>>> with e.begin() as conn:\n...     reflected = sa.Table(\"t\", meta, autoload_with=conn)\n...     print(dict(reflected.kwargs))\n{'sqlite_strict': True, 'sqlite_with_rowid': True}\n\n>>> insp = sa.inspect(conn)\n>>> insp.get_table_options(\"t\")\n{'sqlite_strict': True, 'sqlite_with_rowid': True}\n```\n\nFixes #13543\n",
+    "author_association": "NONE",
+    "user": {
+      "login": "abhi-0203"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13531,
+    "title": "fix catastrophic backtracking in sqlite foreign key reflection regex",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13531",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-24T05:50:01Z",
+    "updated_at": "2026-09-04T17:28:39Z",
+    "closed_at": "2026-09-04T17:28:39Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Fixes: #13530\n\n### Description\n\nWhile reflecting foreign keys on SQLite, `get_foreign_keys` scans the stored\n`CREATE TABLE` text (taken verbatim from `sqlite_master.sql`) with\n`FK_PATTERN`. The referred-columns group is\n`((?:(?:\"[^\"]+\"|[a-z0-9_]+)\\s*(?:,\\s*)?)+)`, which repeats a bare column token\n`[a-z0-9_]+` while the separator between iterations is optional, so it is a\nnested `(a+)+` quantifier. A run of word characters that is not eventually\nfollowed by a closing `)` can then be split across the iterations in\nexponentially many ways, and the engine explores all of them before failing.\n\nSQLite keeps the original text of a `CREATE TABLE` statement, and the pattern\nis applied with `re.finditer` over the whole statement, so the run does not\nhave to be an actual foreign key. Any account that can create a table can\nleave such a run inside e.g. a column `DEFAULT` literal and make later\nreflection of that otherwise ordinary table hang:\n\n```python\nimport time\nfrom sqlalchemy import create_engine, inspect, pool\n\ne = create_engine(\"sqlite://\", poolclass=pool.StaticPool)\nwith e.begin() as c:\n    c.exec_driver_sql(\n        \"CREATE TABLE t (id INTEGER, note TEXT DEFAULT \"\n        \"'FOREIGN KEY (a) REFERENCES b(\" + (\"a\" * 26) + \"')\"\n    )\ninspect(e).get_foreign_keys(\"t\")   # ~9s before, instant after\n```\n\nThe fix requires a non-empty separator (a comma clause or whitespace) between\ncolumn tokens, so a single word run only parses one way and the outer repeat\ncan no longer repartition it. Valid foreign key clauses, including quoted,\ncomposite and `ON DELETE`/`DEFERRABLE` forms, reflect exactly as before; I\nhave added a regression test that reflects a table carrying such a run and\ntimes out on the old pattern.\n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "dxbjavid"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13565,
+    "title": "Release disposed mappers from declared-events listeners and sync-target tracking",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13565",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-04T06:27:05Z",
+    "updated_at": "2026-09-04T06:27:10Z",
+    "closed_at": "2026-09-04T06:27:10Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "### Description\n\nFixes #13564.\n\nTwo process-wide structures kept disposed mappers (and everything reachable from them) alive:\n\n- `_JoinCondition._track_overlapping_sync_targets` stored the `from_` column strongly. Whenever that column could reach the weak `to_` key (e.g. via an `Index` built from an ORM attribute, whose expression is annotated with the mapper), the entry never expired and pinned the whole mapping. The inner dictionary now stores `weakref.ref(from_)`; dead references are skipped when the conflict warning is evaluated.\n- The `after_configured` / `before_configured` listeners created for `__declare_last__` / `__declare_first__` captured the `_ClassScanMapperConfig` (and the class) and were never removed. They now hold the class through a weak reference and are recorded per class so that `registry._dispose_manager_and_mapper()` (used by `registry.dispose()` and `clear_mappers()`) removes them.\n\nTwo tests added (`predictable_gc`): a class with either hook is collected after `registry.dispose()` and the listener count on `Mapper` returns to its previous value; a disposed registry with an ORM-attribute `Index` is collected.\n\n### Checklist\n\nThis pull request is:\n\n- [x] A bug fix\n  - The changelog entry is in `doc/build/changelog/unreleased_20/`; ticket #13564.\n- [ ] A new feature implementation\n- [ ] A documentation / typographical / small typing error fix\n",
+    "author_association": "NONE",
+    "user": {
+      "login": "chervachek1"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13524,
+    "title": "Improve actions files a bit",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13524",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-18T19:12:15Z",
+    "updated_at": "2026-09-02T19:15:25Z",
+    "closed_at": "2026-09-02T19:15:24Z",
+    "merged_at": "2026-09-02T19:15:24Z",
+    "draft": false,
+    "body": "Run zizmor on the github ci to try and avoit supply chain attacks https://docs.zizmor.sh/\r\n\r\nexample of failed run: https://github.com/sqlalchemy/sqlalchemy/actions/runs/32175136115/job/95835192901\r\nexample of ok run: https://github.com/sqlalchemy/sqlalchemy/actions/runs/32175276768/job/95835655986\r\n\r\nto fix the issues we can use `not -s zizmor -- --fix=all` providing a GITHUB_TOKEN",
+    "author_association": "MEMBER",
+    "user": {
+      "login": "CaselIT"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13496,
+    "title": "test PR - ignore",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13496",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-10T22:38:27Z",
+    "updated_at": "2026-09-02T17:56:19Z",
+    "closed_at": "2026-08-10T22:39:03Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "this PR is coming from me so should be accepte4d\r\n\r\nFixes: #11385\r\nChange-Id: Ic00c98c10dbcca0e5ebd22307cd33ba46e669f10\r\n\r\n<!-- Provide a general summary of your proposed changes in the Title field above -->\r\n\r\n**This project accepts pull requests only for issues that a maintainer has\r\nmarked with the `open for pull requests` label.**\r\n\r\nA pull request that doesn't reference such an issue **is closed\r\nautomatically**. That isn't a judgment on your change: it's how we settle on\r\nan approach before anyone spends time writing code, and how we keep two\r\npeople from doing the same work at once.\r\n\r\nThe issue you reference has to be:\r\n\r\n* in this repository,\r\n* open,\r\n* labeled `open for pull requests`, and\r\n* not already labeled `code review in progress`, which means someone is\r\n  working on it already.\r\n\r\nIf there's no such issue yet, open one describing the problem or the feature,\r\nincluding a complete, runnable example, and wait for a maintainer to add the\r\nlabel. Please don't open a pull request first and ask for the label\r\nafterwards.\r\n\r\n### Fixes\r\n\r\n<!-- Put the issue number after the \"#\" below, e.g. \"Fixes: #1234\".\r\n     Leaving this blank means this pull request will be closed. -->\r\n\r\nFixes: #\r\n\r\n### Description\r\n\r\n<!-- Describe your changes in detail. -->\r\n",
+    "author_association": "MEMBER",
+    "user": {
+      "login": "zzzeek"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13552,
+    "title": "sqlite: preserve table options during reflection",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13552",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-29T22:23:27Z",
+    "updated_at": "2026-08-29T22:23:31Z",
+    "closed_at": "2026-08-29T22:23:31Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Summary\n\nSQLite reflection currently drops STRICT and WITHOUT ROWID table options. This loses schema information from reflected Table objects and causes round trips such as Alembic batch recreates to omit the options.\n\nImplement SQLite table option reflection and apply the reflected dialect kwargs to Table objects.\n\n## Tests\n\n- `/tmp/sqlalchemy-venv/bin/python -m pytest -q test/dialect/sqlite/test_reflection.py -k TableOptionsReflectionTest`\n- `/tmp/sqlalchemy-venv/bin/python -m pytest -q test/dialect/sqlite/test_reflection.py`\n- `git diff --check`\n\nFixes #13543.",
+    "author_association": "NONE",
+    "user": {
+      "login": "fredrikblau"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13551,
+    "title": "Document how to add dialect keywords get_columns() column information",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13551",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-29T08:49:50Z",
+    "updated_at": "2026-08-29T08:49:55Z",
+    "closed_at": "2026-08-29T08:49:55Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "This PR fixes the documentation issue reported in #5139: corrects `dialect_options` to `be` in `doc/build/changelog/changelog_10.rst`.\n\nFixes #5139\n\n**This project accepts pull requests only for issues that a maintainer has\nmarked with the `open for pull requests` label.**\n\nA pull request that doesn't reference such an issue **is closed\nautomatically**. That isn't a judgment on your change: it's how we settle on\nan approach before anyone spends time writing code, and how we keep two\npeople from doing the same work at once.\n\nThe issue you reference has to be:\n\n* in this repository,\n* open,\n* labeled `open for pull requests`, and\n* not already labeled `code review in progress`, which means someone is\n  working on it already.\n\nIf there's no such issue yet, open one describing the problem or the feature,\nincluding a complete, runnable example, and wait for a maintainer to add the\nlabel. Please don't open a pull request first and ask for the label\nafterwards.\n\n### Fixes\n\nFixes: #\n\n### Description\n\nFixes #5139",
+    "author_association": "NONE",
+    "user": {
+      "login": "xiaoyaoqilan"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13550,
+    "title": "need docs /warnings that `__init__` is not called on load",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13550",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-29T08:48:27Z",
+    "updated_at": "2026-08-29T08:48:31Z",
+    "closed_at": "2026-08-29T08:48:31Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "This PR fixes the documentation issue reported in #9930: corrects `__init__` to `not` in `doc/build/changelog/changelog_01.rst`.\n\nFixes #9930\n\n**This project accepts pull requests only for issues that a maintainer has\nmarked with the `open for pull requests` label.**\n\nA pull request that doesn't reference such an issue **is closed\nautomatically**. That isn't a judgment on your change: it's how we settle on\nan approach before anyone spends time writing code, and how we keep two\npeople from doing the same work at once.\n\nThe issue you reference has to be:\n\n* in this repository,\n* open,\n* labeled `open for pull requests`, and\n* not already labeled `code review in progress`, which means someone is\n  working on it already.\n\nIf there's no such issue yet, open one describing the problem or the feature,\nincluding a complete, runnable example, and wait for a maintainer to add the\nlabel. Please don't open a pull request first and ask for the label\nafterwards.\n\n### Fixes\n\nFixes: #\n\n### Description\n\nFixes #9930",
+    "author_association": "NONE",
+    "user": {
+      "login": "xiaoyaoqilan"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13549,
+    "title": "Close the DBAPI connection if a connect event raises",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13549",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-29T05:10:07Z",
+    "updated_at": "2026-08-29T05:10:12Z",
+    "closed_at": "2026-08-29T05:10:12Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "`_ConnectionRecord.__connect` assigns the DBAPI connection, then fires `first_connect` / `connect`. If a listener raises, that connection was left on a record that never made it into the pool — `_close_connection` was never called.\n\nClose it before the exception leaves `__connect`.\n\nFixes: #13548\n",
+    "author_association": "NONE",
+    "user": {
+      "login": "gyanu2507"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13471,
+    "title": "Fix get_schema_names() dropping user schemas with a pg prefix",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13471",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-07-30T17:55:27Z",
+    "updated_at": "2026-08-28T20:05:31Z",
+    "closed_at": "2026-08-28T20:05:31Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "### Description\n\n`PGDialect.get_schema_names()` excludes system schemas with `nspname NOT LIKE 'pg_%'` (still the same pattern on `main`, via `.not_like(\"pg_%\")`). In SQL `LIKE`, `_` is a single-character wildcard, so this matches \"pg\" plus any one character plus anything, not the literal `pg_` prefix that real Postgres system schemas actually use (`pg_catalog`, `pg_toast`, etc). Any user-created schema that happens to start with `pg` plus one more character (`pgsql`, `pgstats`, `pgfoo`...) gets silently dropped from `get_schema_names()`.\n\nThis showed up downstream in Apache Superset, where users with schemas like `pgsql`/`pgstats` found them missing from the schema picker with no error: apache/superset#30678. Superset ended up working around it with its own `get_schema_names` override (apache/superset#42312) rather than fixing it at the source.\n\nThe fix swaps the `LIKE` pattern for `~nspname.startswith(\"pg_\", autoescape=True)`, which properly escapes the wildcard character instead of just narrowing it.\n\nAdded a test in `MiscBackendTest` that creates a schema named `pgfoo_test_schema` and asserts it isn't filtered out. Confirmed it fails against the current code and passes with the fix (verified against a disposable local Postgres instance, and pre-commit/black/flake8 all pass).\n\nFixes: #13472\n\n### Checklist\n\nThis pull request is:\n\n- [x] A short code fix\n\t- please include the issue number, and create an issue if none exists, which\n\t  must include a complete example of the issue.  one line code fixes without an\n\t  issue and demonstration will not be accepted.\n\t- Please include: `Fixes: #<issue number>` in the commit message\n\t- please include tests.   one line code fixes without tests will not be accepted.",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "rusackas"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13547,
+    "title": "fix: reflect fractional-seconds precision for MSSQL datetime/time columns",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13547",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-28T02:51:16Z",
+    "updated_at": "2026-08-28T02:51:20Z",
+    "closed_at": "2026-08-28T02:51:20Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Fixes #13497\n\n**Problem**: reflecting MSSQL DATETIME2(p) / DATETIMEOFFSET(p) / TIME(p) columns drops the fractional-seconds precision p: MSDialect._parse_column_info only maps precision/scale onto subclasses of NumericCommon, so datetime/time types come back without precision and re-emitted DDL loses it.\n\n**Fix**: also map numericprec to precision when coltype is a DateTime or Time subclass (DATETIME2/DATETIMEOFFSET/TIME), mirroring the NumericCommon branch.",
+    "author_association": "NONE",
+    "user": {
+      "login": "TrueFurina"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13546,
+    "title": "fix: escape underscore in Postgres get_schema_names LIKE filter",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13546",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-28T02:34:21Z",
+    "updated_at": "2026-08-28T02:34:26Z",
+    "closed_at": "2026-08-28T02:34:26Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Fixes #13472\n\n**Problem**: get_schema_names() on Postgres filters system schemas with NOT LIKE 'pg_%', but _ is a single-character wildcard in SQL LIKE — so any user schema starting with pg plus one more character (e.g. pgx) is silently dropped, not just the literal pg_ prefix used by real system schemas.\n\n**Fix**: escape the underscore (NOT LIKE 'pg\\_%') so the filter matches the literal pg_ prefix only.",
+    "author_association": "NONE",
+    "user": {
+      "login": "TrueFurina"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13545,
+    "title": "fix: surface STRICT and WITHOUT ROWID in SQLite reflection",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13545",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-28T02:29:36Z",
+    "updated_at": "2026-08-28T02:29:41Z",
+    "closed_at": "2026-08-28T02:29:41Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Fixes #13543\n\n**Problem**: reflecting a SQLite table created with `STRICT` and/or `WITHOUT ROWID` produces a `Table` whose `.kwargs` does not carry `sqlite_strict`/`sqlite_with_rowid` — the dialect renders both when compiling CREATE TABLE but reflection never surfaces them.\n\n**Fix**: implement `get_table_options` on the SQLite dialect, parsing the CREATE TABLE text for `STRICT` and `WITHOUT ROWID` and returning them as `sqlite_strict` / `sqlite_with_rowid`, mirroring the MySQL/MSSQL dialect pattern.",
+    "author_association": "NONE",
+    "user": {
+      "login": "TrueFurina"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13544,
+    "title": "fix: avoid catastrophic backtracking in SQLite FK reflection regex",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13544",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-28T02:10:27Z",
+    "updated_at": "2026-08-28T02:10:33Z",
+    "closed_at": "2026-08-28T02:10:33Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Fixes #13530\n\n**Problem**: the referred-columns part of FK_PATTERN is a nested quantifier of the (a+)+ shape, because the separator between iterations is optional. A run of word characters that is not eventually matched causes catastrophic backtracking (ReDoS) when reflecting SQLite foreign keys.\n\n**Fix**: make the comma separator mandatory between referred columns, so matching is linear — each subsequent column must be preceded by a comma, and there is no nested quantifier to backtrack into.",
+    "author_association": "NONE",
+    "user": {
+      "login": "TrueFurina"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13289,
+    "title": "fix: raise clear error when default_factory/default passed to WriteOnlyMapped/DynamicMapped relationship",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13289",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-05-12T07:39:43Z",
+    "updated_at": "2026-08-24T19:52:41Z",
+    "closed_at": "2026-08-24T19:52:41Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "### Description\n\nFixes: #13227\n\nWhen `default_factory=list` or `default` is passed to a `WriteOnlyMapped` or `DynamicMapped` relationship, it previously caused cryptic crashes (e.g., `TypeError: LoaderCallableStatus object is not iterable` in `_WriteOnlyAttributeImpl.set()`). This happens because these mapped types have no in-memory collection, so `default_factory` and `default` are not meaningful.\n\nThis PR adds an explicit `ArgumentError` in `RelationshipProperty.__init__()` that fires when `default_factory` or `default` is set on a write-only or dynamic relationship, with a clear message:\n\n> WriteOnlyMapped / DynamicMapped relationship {name} does not support 'default' or 'default_factory' properties. Use 'init=False' to exclude this attribute from \\_\\_init\\_\\_.\n\n**Changes:**\n- `lib/sqlalchemy/orm/relationships.py`: Added check for `is_write_only or is_dynamic` with `dataclasses_default_factory`/`dataclasses_default` raising `ArgumentError`. Also bypassed early default rejection in `_RelationshipDeclared` for write_only/dynamic lazy so the specific error fires.\n- `test/orm/declarative/test_typed_mapping.py`: Added tests for both WriteOnlyMapped and DynamicMapped with `default_factory` and `default`.\n\n### Checklist\n\n- [x] Tests added for WriteOnlyMapped + DynamicMapped with both default_factory and default\n- [x] Single consolidated error message per review feedback\n- [x] Please include: `Fixes: #13227` in the commit message",
+    "author_association": "NONE",
+    "user": {
+      "login": "algojogacor"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13467,
+    "title": "replace use of the term \"primary key identifier\" with \"identity key\" for ORM",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13467",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-07-29T08:02:01Z",
+    "updated_at": "2026-08-24T19:45:43Z",
+    "closed_at": "2026-08-24T19:45:42Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "### Description\n\nThis PR fixes the documentation issue reported in #7360: corrects `primary key identifier` to `identity key` in `doc/build/changelog/changelog_14.rst`.\n\nFixes #7360\n\n### Checklist\n\nThis pull request is:\n\n- [x] A documentation / typographical / small typing error fix\n\t- Good to go, no issue or tests are needed\n- [ ] A short code fix\n\t- please include the issue number, and create an issue if none exists, which\n\t  must include a complete example of the issue.  one line code fixes without an\n\t  issue and demonstration will not be accepted.\n\t- Please include: `Fixes: #<issue number>` in the commit message\n\t- please include tests.   one line code fixes without tests will not be accepted.\n- [ ] A new feature implementation\n\t- please include the issue number, and create an issue if none exists, which must\n\t  include a complete example of how the feature would look.\n\t- Please include: `Fixes: #<issue number>` in the commit message\n\t- please include tests.\n\n**Have a nice day!**\n\nFixes #7360",
+    "author_association": "NONE",
+    "user": {
+      "login": "xiaoyaoqilan"
+    },
+    "assignees": [],
+    "labels": [
+      {
+        "name": "awaiting revision"
+      }
+    ]
+  },
+  {
+    "number": 13474,
+    "title": "fix(mysql): backslash-escape reflected DEFAULT values in _describe_to_create (#13469)",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13474",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-07-31T22:33:06Z",
+    "updated_at": "2026-08-24T19:44:21Z",
+    "closed_at": "2026-08-24T19:44:21Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Summary\n\nFixes a narrow DDL-re-emit bug in `MySQLTableDefinitionParser._describe_to_create` (the DESCRIBE/SHOW-COLUMNS fallback used for view reflection). The reflected `DEFAULT` was rendered with `\"'%s'\" % default.replace(\"'\", \"''\")` — which only doubles single quotes — so under the default `sql_mode` (where `\\\\` is an escape character), a reflected default containing a backslash (or one ending in a backslash, which would escape the closing quote) re-emits as invalid DDL.\n\nThis is the same class of issue as the `enum` / `set` path fixed in #13466. The audit at #13469 flagged this site specifically:\n\n> `mysql/reflection.py` in `_describe_to_create` renders a reflected column `DEFAULT` back into DDL text with `\"'%s'\" % default.replace(\"'\", \"''\")`. Quotes are doubled but backslashes are left alone, so under the default `sql_mode` a default value containing a backslash is re-emitted incorrectly, and one ending in a backslash escapes the closing quote, exactly like the enum/set path. It only runs on the DESCRIBE fallback used for view reflection, so it is fairly narrow, but it is the same class of issue. Probably wants the same treatment (route it through the preparer helper, guarded on `_backslash_escapes`).\n\n## What this PR changes\n\n- `lib/sqlalchemy/dialects/mysql/reflection.py` — when the dialect's `_backslash_escapes` flag is set (the default for both `mysql` and `mariadb`), double the backslashes in the reflected default before doubling the single quotes. A default containing a NUL or other raw byte is still emitted unchanged, which is correct: under `NO_BACKSLASH_ESCAPES` a quoted MySQL string is a raw byte sequence, so the previous behavior for those values is preserved.\n- `test/dialect/mysql/test_reflection.py` — new `DescribeToCreateDefaultEscapeTest` class with 6 parameterized cases (plain ASCII, single-quote doubling, mid-string backslash, trailing backslash, embedded newline, NUL byte) plus a round-trip assertion that confirms the reflected DDL re-emits as valid MySQL.\n\n## Tests\n\n```\n$ pytest test/dialect/mysql/test_reflection.py::DescribeToCreateDefaultEscapeTest -v\n======================== 7 passed in 0.07s ========================\n```\n\nAnd the full MySQL reflection test suite still passes (18/18).\n\n## Scope\n\nThis fix is narrow on purpose: it touches one function in one file, with a focused test. The audit at #13469 also flagged other dialect sites, but those are either already correct (the `render_literal_value` paths in `mysql/base.py` and `postgresql/base.py`) or sit in areas the audit author flagged but the maintainers have not yet directed work toward. I'm only fixing the site the audit explicitly said \"Happy to open a PR for\", to keep the change reviewable on its own and leave the broader dialect sweep to the audit's owner if they want to drive that.\n\n## Out of scope (separate work, mentioned for completeness)\n\n- The other dialect sites from the #13469 audit that the author marked as \"look fine\" or that need maintainer direction\n- The fallback `mysql.base._format_string_literal` API surface — this PR doesn't touch it\n- Any new tests for `render_literal_value` in `mysql/base.py` (the existing path is already correct per the audit)\n",
+    "author_association": "NONE",
+    "user": {
+      "login": "MohammedAnasNathani"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 13288,
+    "title": "fix(pool): use time.monotonic() instead of time.time() for connection timestamps",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy/pull/13288",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-05-12T06:05:12Z",
+    "updated_at": "2026-08-24T19:42:58Z",
+    "closed_at": "2026-08-24T19:42:58Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "### Description\n\nReplaced all `time.time()` calls in `pool/base.py` with `time.monotonic()` for connection record timestamp tracking. Also updated the comment block that documented the Windows precision caveat.\n\n`time.time()` on Windows has approximately 16 ms granularity, which can cause soft invalidation checks to fail when `_soft_invalidate_time` and `starttime` are captured in the same timer quantum. `time.monotonic()` is monotonic by definition and provides sub-millisecond precision on all platforms, so the `>` comparisons between timestamps work correctly regardless of platform timer resolution.\n\nFour sites changed (all in `lib/sqlalchemy/pool/base.py`):\n- `Pool._invalidate_time` assignment (line 407)\n- `_ConnectionRecord._soft_invalidate_time` assignment (line 812)\n- Connection recycle time check in `get_connection` (line 838)\n- `_ConnectionRecord.starttime` assignment in `__connect` (line 893)\n\nAll comparisons are relative (timestamp vs timestamp or timestamp delta vs timeout), so switching to `time.monotonic()` preserves existing behavior while fixing the precision issue.\n\n- [x] A short code fix\n  - Fixes: #13169\n  - Existing pool invalidation tests cover the comparison logic",
+    "author_association": "NONE",
+    "user": {
+      "login": "algojogacor"
+    },
+    "assignees": [],
+    "labels": []
+  }
+]

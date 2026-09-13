@@ -1,4 +1,5 @@
 import type { ApiComment, ApiIssue, ApiPull, ApiTimelineEvent } from '../api-types.js';
+import { count } from '../text.js';
 import type { CheckContext, CheckResult, Evidence } from '../types.js';
 
 const MAX_MENTIONS = 5;
@@ -67,8 +68,8 @@ export async function checkAlreadyFixed(ctx: CheckContext): Promise<CheckResult>
     };
   }
   const parts: string[] = [];
-  if (commitCount > 0) parts.push(`${commitCount} commit${commitCount === 1 ? '' : 's'} in this repo mention${commitCount === 1 ? 's' : ''} it`);
-  if (mergedCount > 0) parts.push(`the discussion points at ${mergedCount} merged pull request${mergedCount === 1 ? '' : 's'}`);
+  if (commitCount > 0) parts.push(`${count(commitCount, 'commit')} in this repo mention${commitCount === 1 ? 's' : ''} it`);
+  if (mergedCount > 0) parts.push(`the discussion points at ${count(mergedCount, 'merged pull request')}`);
   return {
     id: 'already_fixed',
     status: 'warn',

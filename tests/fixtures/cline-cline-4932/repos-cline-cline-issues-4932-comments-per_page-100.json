@@ -1,0 +1,86 @@
+[
+  {
+    "user": {
+      "login": "kevinneung"
+    },
+    "author_association": "CONTRIBUTOR",
+    "body": "Hey @mforzano , thanks for reporting this. Although we merged PR #4246, to improve accessibility, I walked through our UI using NVDA, and found a lot to be desired. We'll prioritize this accordingly, so that screen readers will have better usage within Cline."
+  },
+  {
+    "user": {
+      "login": "mforzano"
+    },
+    "author_association": "NONE",
+    "body": "> Hey [@mforzano](https://github.com/mforzano) , thanks for reporting this. Although we merged PR [#4246](https://github.com/cline/cline/pull/4246), to improve accessibility, I walked through our UI using NVDA, and found a lot to be desired. We'll prioritize this accordingly, so that screen readers will have better usage within Cline.\n\nThank you. Yes, there are a lot of unlabelled buttons and such to start with. Very much appreciate you prioritizing accessibility overall. I do not think I will have the bandwidth any time soon to file bugs for each individual issue, but this one is my biggest pain point at the moment."
+  },
+  {
+    "user": {
+      "login": "saoudrizwan"
+    },
+    "author_association": "CONTRIBUTOR",
+    "body": "Thank you for the suggestions @mforzano! We will address ASAP"
+  },
+  {
+    "user": {
+      "login": "github-actions[bot]"
+    },
+    "author_association": "CONTRIBUTOR",
+    "body": "This issue is stale because it has been open for 60 days with no activity."
+  },
+  {
+    "user": {
+      "login": "github-actions[bot]"
+    },
+    "author_association": "CONTRIBUTOR",
+    "body": "Thanks for raising this accessibility issue @mforzano. I looked into the current state of the Plan/Act mode toggle.\n\n## Current State\n\nThe good news is there's already been some work done on this. PR #4263 by @yncat (merged June 2025) added `role=\"switch\"` and `aria-checked` attributes to address the duplicate issue #4244. However, the current implementation still has semantic problems that explain what you're experiencing.\n\nLooking at the current code in `ChatTextArea.tsx` (lines 1782-1794), the toggle uses two separate `<div>` elements each with `role=\"switch\"` and `aria-checked`:\n\n```tsx\n{[\"Plan\", \"Act\"].map((m) => (\n    <div\n        aria-checked={mode === m.toLowerCase()}\n        role=\"switch\">\n        {m}\n    </div>\n))}\n```\n\n**The problem**: This pattern doesn't properly convey the mutually exclusive nature of the toggle. Screen readers see two independent switches rather than a single toggle or radio group. The ARIA spec notes that for mutually exclusive options like this, `role=\"radiogroup\"` with `role=\"radio\"` children (as you suggested) would be more semantically correct.\n\n## Recommended Fix\n\nThe toggle should either:\n1. Use **`role=\"radiogroup\"`** on the container with **`role=\"radio\"`** on each option (recommended for this use case)\n2. Or use a single **`role=\"switch\"`** on the container with proper labeling\n\nExample implementation using radio pattern:\n```tsx\n<SwitchContainer role=\"radiogroup\" aria-label=\"Mode selection\">\n    {[\"Plan\", \"Act\"].map((m) => (\n        <div\n            role=\"radio\"\n            aria-checked={mode === m.toLowerCase()}\n            tabIndex={mode === m.toLowerCase() ? 0 : -1}\n        >\n            {m}\n        </div>\n    ))}\n</SwitchContainer>\n```\n\n## Context for Maintainers\n\n**Relevant code**: `webview-ui/src/components/chat/ChatTextArea.tsx:1780-1795`\n\nThe current attributes were added in PR #4263 but the component was later refactored in PR #6872 (HeroUI to shadcn tooltip migration by @abeatrix) which changed from styled-components to a mapped array approach. The ARIA attributes were preserved but the semantic pattern remains incorrect.\n\n| SME | Reason |\n|-----|--------|\n| @yncat | Original accessibility fix author (PR #4263), active a11y contributor |\n| @abeatrix | Refactored this component in PR #6872, primary UI contributor |\n| @saoudrizwan | Primary contributor to chat components |\n\n---\n\n**Possible Duplicates**\n- #4244 - Exact duplicate (closed by PR #4263), but the fix was incomplete/regressed\n- #4245 - Related issue about unlabeled buttons (resolved)"
+  },
+  {
+    "user": {
+      "login": "linear[bot]"
+    },
+    "author_association": "NONE",
+    "body": "<!-- linear-linkback -->\n<p><a href=\"https://linear.app/cline-bot/issue/CLINE-853/accessibility-screen-reader-users-cant-determine-if-they-are-in-plan\">CLINE-853</a></p>"
+  },
+  {
+    "user": {
+      "login": "yncat"
+    },
+    "author_association": "CONTRIBUTOR",
+    "body": "Hi.\nI haven't been able to work on labelling buttons for Cline recently. If you discovered buttons which you wanted an accessible label, please feel free to file an issue and assign me."
+  },
+  {
+    "user": {
+      "login": "sovenor"
+    },
+    "author_association": "NONE",
+    "body": "Has this issue been fully resolved or is there more work to be done? I'm willing to help if there's clear next steps on what needs to be completed."
+  },
+  {
+    "user": {
+      "login": "yncat"
+    },
+    "author_association": "CONTRIBUTOR",
+    "body": "My current understanding is that the issue has fully been resolved."
+  },
+  {
+    "user": {
+      "login": "minh2416294"
+    },
+    "author_association": "CONTRIBUTOR",
+    "body": "i'd like to pick this up. I checked the current state on main and dont think its fully resolved - #4263 added role=\"switch\" to the two buttons but they're still two separate sibling switches with no group around them, so a screen reader still cannot tell that plan and act are mutually exclusive or which one is active\n\nright now in ChatTextArea the container has no role or label and each button is role=\"switch\". my plan is the radiogroup pattern the bot suggested - role=\"radiogroup\" + aria-label on the container, role=\"radio\" on each button (keeping the existing aria-checked), and a roving tabindex so its one tab stop with the active mode focusable. that gets it announcing as \"plan/act mode, plan, radio button, selected\"\n\ni scope this to the announcement + focus part (the actual reported bug). full arrow-key selection inside the group would be a bigger follow-up."
+  },
+  {
+    "user": {
+      "login": "xiaoguomeiyitian"
+    },
+    "author_association": "NONE",
+    "body": "Hi! I'd like to pick this up.\n\nI'll work on a focused fix for the Plan/Act mode toggle screen-reader announcement:\n\n- Container: add `role=\"radiogroup\"` + an `aria-label`.\n- Children: switch from `role=\"switch\"` to `role=\"radio\"` (keep `aria-checked`).\n- Add roving `tabIndex` so the group is one tab stop and the active mode is focusable.\n- I'll scope this to the announcement + focus part of the reported regression and not touch arrow-key selection inside the group.\n\nBranching `fix/issue-4932` off current `main`. Draft PR coming shortly."
+  },
+  {
+    "user": {
+      "login": "xiaoguomeiyitian"
+    },
+    "author_association": "NONE",
+    "body": "@Cunninger @harrisonofcline @yncat — quick ping. I picked this up and opened a ready-for-review PR: https://github.com/cline/cline/pull/13940\n\nIt scopes to the announcement + focus part of the reported regression (radiogroup + radio + roving tabindex), keeps click / shortcut behavior, and adds a focused a11y test. Local `bun run test` is green (484/484) and `tsc` is clean in both `apps/vscode` and `apps/vscode/webview-ui`.\n\nSince this is my first contribution here, the `ext-jb-test-integration` workflow is showing SKIPPED waiting for a first-time-contributor approve — could a maintainer kick it off when convenient? Happy to iterate on feedback."
+  }
+]

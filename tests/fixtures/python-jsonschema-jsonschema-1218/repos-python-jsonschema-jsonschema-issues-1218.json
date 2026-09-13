@@ -1,0 +1,25 @@
+{
+  "number": 1218,
+  "title": "Feature request: Add support for a second message attribute on errors which is guaranteed not to include the failing instance",
+  "html_url": "https://github.com/python-jsonschema/jsonschema/issues/1218",
+  "state": "open",
+  "state_reason": null,
+  "locked": false,
+  "created_at": "2024-01-26T17:27:13Z",
+  "updated_at": "2026-09-12T19:42:42Z",
+  "closed_at": null,
+  "body": "This is a feature which I'd be very happy to work on, if it gets the ol' :+1: of approval as an idea!\r\n(It's a case in which I could probably do FOSS work as part of my paid work allotment, rather than on personal time.)\r\n\r\n## Motivation\r\n\r\nFor context, we have a use-case at $WORK in which `jsonschema` is being used to validate data which is sourced from a mixture of locations. Some of the data is user-supplied, and some of it is sourced from config or application-owned secrets.\r\nAs a result, the user who is triggering this interaction is not guaranteed to have the rights/permission to see the full body of data being passed to `jsonschema`. The application therefore cannot show `ValidationError.message` data, since it may contain secrets.\r\n\r\nI think the feature idea here has broader applicability -- and I don't think that the case I have at $WORK represents a great application design -- but there's my particular user story.\r\n\r\nMore generally, having some kind of message string which doesn't include the `instance` would allow applications to inspect the messages more reliably and potentially choose special behaviors for known errors. Today, this is only possible with some detailed knowledge of the error formats, and checks such as `err.message.startswith(...)`.\r\n\r\n## Proposal: `ValidationError.reason`\r\n\r\nI'm proposing a new string property on error classes, which is primarily intended for `ValidationError` but may be useful in other cases (needs some evaluation). The purpose of this property is to name the error case sans the input instance. In concert with the JSON Path to the failing instance, this is nearly equivalent to the current content in `message`, but it doesn't produce `str(instance)` as part of the error message.\r\n\r\n`reason` is either provided explicitly or falls back to `None`. I considered having it default to `message` but that makes things messier for a client, which then has fewer guarantees about what might be in the `reason` field.\r\n\r\nWhere possible, `reason` may be used to add details which are not present in the `message` and would now be a breaking change to introduce.\r\n\r\n`reason` would be documented as a concise description of the error cause which does not to contain details from the instance being evaluated.\r\n\r\n### Example Changes\r\n\r\n`additionalProperties` keyword validation produces messages of the form `\"Additional properties are not allowed ({fields} {was|were} unexpected)\"`.\r\nThe `reason` field on such an error would be `\"Additional properties are not allowed.\"`.\r\n\r\n`maxLength` validation produces messages of the forms `\"{instance} is expected to be empty\"` and `\"{instance} is too long\"`.\r\nThe `reason` field on such an error would be `\"The value is too long. The maximum length is {maxLength}.\"`\r\n\r\n> [!Note]\r\n> I would be open to an alternative interpretation in which we make `reason` more closely aligned with describing the schema/spec.\r\n> That could lead to terse and technical `reason` values like `\"additionalProperties validation failed.\"` or `\"maxLength={maxLength} exceeded.\"`.\r\n>\r\n> The above proposed changes are only where I'm leaning right now -- a slight re-encoding of `message` without the instance and potentially with other useful info.\r\n\r\n## Proposed Implementation\r\n\r\nI would make this change by first updating the core `_Error` base class to support `reason` as a `str | None` field.\r\nI then \"just\" need to walk all of the keywords and add explicit `reason` strings for each validator, plus a test case for each.\r\n\r\nI don't think this is very complex as a change, although it is a bit tedious and laborious to add.",
+  "author_association": "MEMBER",
+  "user": {
+    "login": "sirosen"
+  },
+  "assignees": [],
+  "labels": [
+    {
+      "name": "Enhancement"
+    },
+    {
+      "name": "Help Wanted"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "number": 2595,
+  "title": "Enhancement: Add recursive relations to PiccoloDTO",
+  "html_url": "https://github.com/litestar-org/litestar/issues/2595",
+  "state": "open",
+  "state_reason": null,
+  "locked": false,
+  "created_at": "2023-11-01T20:45:55Z",
+  "updated_at": "2026-09-12T18:48:23Z",
+  "closed_at": null,
+  "body": "### Summary\n\nAs mentioned by @Goldziher in #1533 there currently isn't support for recursive relationships in PiccoloDTO. This would be a nice feature to have.\n\n### Basic Example\n\n```from piccolo.table import Table\r\nfrom piccolo.columns import ForeignKey, Integer, Varchar\r\nfrom litestar.dto import DTOConfig\r\nfrom litestar.contrib.piccolo import PiccoloDTO\r\n\r\nclass Manager(Table):\r\n    name = Varchar(length=100)\r\n\r\nclass Band(Table):\r\n    name = Varchar(length=100)\r\n    manager = ForeignKey(references=Manager)\r\n    popularity = Integer()\r\n\r\nclass BandOutputDTO (PiccoloDTO[Band]):\r\n    config = DTOConfig(include={\"name\", \"manager.name\", \"popularity\"})\r\n```\n\n### Drawbacks and Impact\n\n_No response_\n\n### Unresolved questions\n\n_No response_",
+  "author_association": "NONE",
+  "user": {
+    "login": "beerbrewingman"
+  },
+  "assignees": [],
+  "labels": [
+    {
+      "name": "Enhancement"
+    },
+    {
+      "name": "Help Wanted :sos:"
+    },
+    {
+      "name": "DTOs"
+    },
+    {
+      "name": "Databases / ORMs"
+    }
+  ]
+}

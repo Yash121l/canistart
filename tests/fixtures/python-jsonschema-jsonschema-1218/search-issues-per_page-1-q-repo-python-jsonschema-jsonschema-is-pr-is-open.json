@@ -1,0 +1,27 @@
+{
+  "total_count": 5,
+  "items": [
+    {
+      "number": 1561,
+      "title": "Support swappable regular expression engines",
+      "html_url": "https://github.com/python-jsonschema/jsonschema/pull/1561",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-08-20T20:17:50Z",
+      "updated_at": "2026-09-09T23:24:19Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "This PR introduces a \"regular expression provider\".\r\n\r\nThe feature allows alternate regular expression engines -- with different regex features, or with linear complexity guarantees, or other desirable attributes -- to be swapped out in place of Python's `re` parser.\r\n\r\nCloses python-jsonschema/jsonschema#1142\r\n\r\n> [!NOTE]\r\n>\r\n> I didn't see a way to neatly address the existing `is_regex()` format checker. It's hard-coded to use Python's `re` module and has no ability to access the validator instance on whose behalf it's running. This creates to distinct failure modes.\r\n>\r\n> First, it's possible for `Validator.check_schema()` to pass but for `validator.validate()` to fail with an uncaught exception when the configured regex engine rejects an unsupported regex feature. No `re.*` usage in jsonschema uses `try/except` clauses to guard against this, and I didn't introduce anything to address this failure mode.\r\n>\r\n> The other failure mode is that a regex feature supported by the configured regex engine would be rejected as invalid when `.check_schema()` is called.\r\n>\r\n> I chose to address this via documentation for the time being, as the work in this PR is sufficient to address the core security need that I have, as well as the core feature need seen in #1142.\r\n\r\n# Example usage\r\n\r\nThis example uses Google's re2 package, which allows me to close a serious denial of service issue in a web service I maintain.\r\n\r\n```python\r\nimport jsonschema\r\nimport re2\r\n\r\n\r\nclass Re2Provider(jsonschema.protocols.RegexProvider):\r\n    raises = (re2.error,)\r\n    compile = staticmethod(re2.compile)\r\n    search = staticmethod(re2.search)\r\n\r\n\r\nSafeValidator = jsonschema.validators.extend(\r\n    jsonschema.validators.Draft202012Validator,\r\n    regex_provider=Re2Provider(),\r\n)\r\n\r\n\r\ndef is_regex(_instance: str) -> bool:\r\n    if not isinstance(_instance, str):\r\n        return True\r\n    return bool(re2.compile(_instance))\r\n\r\n\r\nSafeValidator.FORMAT_CHECKER.checkers[\"regex\"] = (is_regex, Re2Provider.raises)\r\n\r\n# SafeValidator is now configured for use.\r\n```\r\n",
+      "author_association": "CONTRIBUTOR",
+      "user": {
+        "login": "kurtmckee"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    }
+  ]
+}

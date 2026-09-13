@@ -1,0 +1,19 @@
+{
+  "number": 2105,
+  "title": "fix(ams): fall back to filament metadata when firmware omits per-tray state",
+  "html_url": "https://github.com/greghesp/ha-bambulab/pull/2105",
+  "state": "closed",
+  "locked": false,
+  "created_at": "2026-08-30T19:38:37Z",
+  "updated_at": "2026-09-01T16:06:52Z",
+  "closed_at": "2026-09-01T16:06:52Z",
+  "merged_at": "2026-09-01T16:06:52Z",
+  "draft": false,
+  "body": "## Description\n\nAMS trays show as empty on printers whose firmware sends a full tray\npayload without a per-tray `state` field, even though the payload has\ncomplete filament data.\n\n`AMSTray` initializes `self.state = 8`, and `_resolve_loaded_state()`\ndecides empty/loaded only from `ams_tray_spool_loaded(self.state)`. When a\ntray arrives with no `state` key, `print_update()` leaves `self.state` at\nthe default `8` (`STEADY` set, `SPOOL` clear), so `ams_tray_spool_loaded(8)`\nis `False` and the slot is reset to empty. The filament data that did\narrive (tray_info_idx, tray_type, remain, colour) is discarded.\n\nExample tray from such a payload, currently forced empty:\n\n```json\n{\"id\":\"0\",\"remain\":43,\"tag_uid\":\"0000000000000000\",\"tray_info_idx\":\"GFA01\",\n \"tray_type\":\"PLA\",\"tray_sub_brands\":\"PLA Matte\",\"tray_color\":\"FFFFFFFF\"}\n```\n\nFix: track whether the printer has ever reported a `state` field. When it\nhas, behaviour is unchanged and the `state` bitfield stays the source of\ntruth. When it never does, fall back to filament metadata presence.\n\n- `_state_reported` flag, set in `print_update()` when `'state' in data`\n- `_has_filament_metadata()` helper\n- `_resolve_loaded_state()` selects the state path or the metadata fallback\n\nFirmware that reports `state` is unaffected.\n\n## Type of Change\n\n- [x] Bug fix\n\n### Link to Issue\n\n<!-- none -->\n\n## Documentation\n\n- [x] No documentation updates were necessary for this change\n\n## Testing\n\nAdds `TestAMSTrayNoStateFirmware` to `tests/pybambu/test_ams_tray_state.py`\nfor the no-`state` path: loaded full payload, empty slot, type-only, and\nthe transition where `state` starts being reported and takes over. Existing\ntests still pass (`python -m pytest tests/pybambu`, 90 passed).\n\n- [x] I have added/updated tests that prove my fix is effective\n- [x] All new and existing tests passed\n\n## Additional Notes\n\nSeen on a P1S with a single AMS, running firmware 01.07.00.00. That\nfirmware is kept on purpose, since newer releases restrict the local\naccess this integration depends on. It sends full tray metadata but no\nper-tray `state`, so the fallback only applies when `state` is never\npresent and does not relax empty detection for firmware that reports it.\n",
+  "author_association": "CONTRIBUTOR",
+  "user": {
+    "login": "Frosbe"
+  },
+  "assignees": [],
+  "labels": []
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "user": {
+      "login": "Julian"
+    },
+    "author_association": "MEMBER",
+    "body": "In general this sounds fine to me -- the main two things I think I'd want to be sure of are:\r\n\r\n* In whatever future where #119 lands it will be by splitting `ValidationError` into `n` per-keyword exception classes, e.g. `exceptions.failure.MinItems`, `exceptions.failure.Required`, `exceptions.failure.AllOf`, etc. In that world, a bunch of the error properties are going to be deprecated (e.g. `ValidationError.context` which only applies to applicator keywords, so will only be an attribute on `AllOf` and not `Required` exceptions). And hopefully `_Error` will disappear entirely, but we'll see. I did some work to start on this but didn't finish it, mostly again because to do it right requires assembling a test suite for error messages that's better than the ad hoc one here (`TestValidationErrorMessages`). It's not an insurmountable amount of work, just work, and I intend(ed) to get back to it sometime this year now that referencing is maturing (though there's an important piece of work I want to do there too which is higher priority). Anyways -- all this is relevant only inasmuch as I don't want to make that work any harder -- but I think the attribute you're proposing will be applicable to all classes, so that should be fine.\r\n* I *do* though want to have a name that fits, especially since choosing the right one will mean it won't need changing again as part of the above. In particular, we already have `context` and `cause` -- extremely general sounding names which we use in sort of specific ways. So I want to avoid more of that, especially again to be sure the names stick when we do the Great Exception Split of 2024(hopefully). I think` short_message` is a bit clearer for that, but maybe there are even more ideas we can bikeshed if need be. We'll regardless have to document what you say (that it's guaranteed to not have the instance in it).\r\n\r\nBut other than the above, and a request to add tests of this property for all keywords, I'm good with it!"
+  },
+  {
+    "user": {
+      "login": "sirosen"
+    },
+    "author_association": "MEMBER",
+    "body": "I have a mix of thoughts, not all well-organized, so I'll try to summarize what I see right now.\r\n\r\n1. I'm okay with an alternative name.\r\n\r\nI've found some APIs somewhat-frustrating to use when they make names for related things hard to distinguish. e.g. `reason`, `cause`, `details`, and `description` all being different strings. It's hard to know which one is which. `reason` is vulnerable to this criticism.\r\nI'm not sure that `short_message` is what I would choose though, since it's possible, at least in one of my examples for `maxLength`, for the message to be _longer_ than a `message`.\r\n\r\nI really wanted to call it `cause`, but I saw that's already in use. I'll need to think more about naming. Never easy! :grinning: \r\n\r\n2. I need to read your comment on the future refactoring direction more carefully.\r\n\r\nThis is going to take me some time to digest and make sure I understand. I'm not worried too much about it, but I haven't digested it enough to think through the implications.\r\n\r\n3. There are two things which I've conflated in my initial proposal, which are separately useful:\r\n\r\n- messages which are static (never interpolate any values)\r\n- info currently missing from `message` (like keyword values)\r\n\r\nI think that both of these are features which would be nice to have.\r\nIf I were to separate those, maybe there are two new fields?\r\n\r\n```python\r\n# pseudocode for the new attributes\r\nclass ValidationError:\r\n    ...\r\n    # a pair of (keyword, keyword-value), e.g. `(\"maxLength\", 3)`\r\n    keyword: tuple[str, Any]\r\n    # a string unique to the keyword validation failure, e.g. \"too long\" for maxLength\r\n    error_category_message: str\r\n```\r\n\r\nI'm just spitballing a little bit here."
+  },
+  {
+    "user": {
+      "login": "Julian"
+    },
+    "author_association": "MEMBER",
+    "body": "> info currently missing from message (like keyword values)\r\n\r\nThe only known examples of this should be #119, #992 and #993 and in general it's considered a bug, but yeah the solution I'd like is what I mentioned, of course happy to elaborate or brainstorm further on it "
+  },
+  {
+    "user": {
+      "login": "sirosen"
+    },
+    "author_association": "MEMBER",
+    "body": "I just wanted to drop a small note, since it's been ~1 month and I haven't done anything:\r\n\r\nI still want to do this, but I'm trying to negotiate the scheduling at work so that I can do this during working hours. (I've had really limited hobby development time lately.)"
+  },
+  {
+    "user": {
+      "login": "Julian"
+    },
+    "author_association": "MEMBER",
+    "body": "Cool, thanks for the update -- I have little doubt you won't completely disappear :D -- definitely understood on the hobby side!"
+  },
+  {
+    "user": {
+      "login": "Yash121l"
+    },
+    "author_association": "NONE",
+    "body": "This has been quiet for a while and is labelled Help Wanted, so I would be glad to implement it, but the thread ends on the naming question and I do not want to pick for you.\n\nReading back, the scope narrowed since the original proposal. @Julian, your point that the \"info missing from `message`\" half (#119, #992, #993) is a bug for the exception split to fix means this attribute would only ever be `message` minus the instance, never extra detail. If so, that also removes @sirosen's objection to `short_message`, since it could never be longer than `message`.\n\nSo, concretely: is `short_message` the name, defined as \"a description of the failure guaranteed never to contain any part of the instance, and never carrying information beyond what `message` already carries\"?\n\nTwo follow-ups once the name is settled:\n- You asked for coverage of all keywords. One PR (about 47 `ValidationError` sites across `_keywords.py`, `_legacy_keywords.py` and `validators.py`), or base-class plumbing plus docs first and the keyword sweep second?\n- For keywords whose `message` already contains no instance data (`required`, `additionalProperties`, `dependencies`), should the attribute repeat `message` or stay `None`?\n"
+  }
+]

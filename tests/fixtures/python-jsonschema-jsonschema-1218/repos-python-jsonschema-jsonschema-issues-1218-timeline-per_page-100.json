@@ -1,0 +1,40 @@
+[
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 1233,
+        "html_url": "https://github.com/python-jsonschema/jsonschema/issues/1233",
+        "state": "closed",
+        "repository": {
+          "full_name": "python-jsonschema/jsonschema"
+        },
+        "pull_request": null
+      }
+    }
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 3286,
+        "html_url": "https://github.com/DIAGNijmegen/rse-grand-challenge/pull/3286",
+        "state": "closed",
+        "repository": {
+          "full_name": "DIAGNijmegen/rse-grand-challenge"
+        },
+        "pull_request": {
+          "merged_at": "2024-03-25T14:50:56Z"
+        }
+      }
+    }
+  },
+  {
+    "event": "referenced",
+    "commit_id": "9b4f11389aed255c65a3a411e7afaaa024af419a"
+  }
+]

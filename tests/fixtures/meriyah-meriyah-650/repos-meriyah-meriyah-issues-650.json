@@ -1,1 +1,22 @@
-{"assignees":[],"author_association":"COLLABORATOR","body":"\u003e we probably need to improve the type def for `export type Labels = any;`.\n\n_Originally posted by @3cp in https://github.com/meriyah/meriyah/issues/646#issuecomment-5576070592_\n            ","closed_at":null,"comments":0,"created_at":"2026-09-09T08:21:07Z","html_url":"https://github.com/meriyah/meriyah/issues/650","labels":[{"name":"help wanted"}],"locked":false,"number":650,"state":"open","state_reason":null,"title":"Improve the type def for `Labels`","updated_at":"2026-09-09T08:21:39Z","user":{"login":"fisker"}}
+{
+  "number": 650,
+  "title": "Improve the type def for `Labels`",
+  "html_url": "https://github.com/meriyah/meriyah/issues/650",
+  "state": "open",
+  "state_reason": null,
+  "locked": false,
+  "created_at": "2026-09-09T08:21:07Z",
+  "updated_at": "2026-09-09T08:21:39Z",
+  "closed_at": null,
+  "body": "> we probably need to improve the type def for `export type Labels = any;`.\n\n_Originally posted by @3cp in https://github.com/meriyah/meriyah/issues/646#issuecomment-5576070592_\n            ",
+  "author_association": "COLLABORATOR",
+  "user": {
+    "login": "fisker"
+  },
+  "assignees": [],
+  "labels": [
+    {
+      "name": "help wanted"
+    }
+  ]
+}

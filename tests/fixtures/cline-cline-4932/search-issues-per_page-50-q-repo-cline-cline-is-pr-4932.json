@@ -1,0 +1,261 @@
+{
+  "total_count": 11,
+  "items": [
+    {
+      "number": 13947,
+      "title": "fix(webview): expose Plan/Act toggle as an accessible radiogroup (#4932)",
+      "html_url": "https://github.com/cline/cline/pull/13947",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-09-08T09:19:32Z",
+      "updated_at": "2026-09-12T02:59:54Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "## What Problem This Solves\n\nThe Plan/Act mode toggle in the chat input was rendered as two sibling `<div>` elements, each with `role=\"switch\"` and `aria-checked`. Screen readers therefore announced them as two independent switches rather than a single mutually-exclusive choice, and there was no way to tell from the announcement which mode was active or that the two options were mutually exclusive. See [cline/cline#4932](https://github.com/cline/cline/issues/4932).\n\n## Why This Change Was Made\n\nRestructure the toggle to follow the WAI-ARIA `radiogroup` pattern, which is the correct semantic for a binary mutually-exclusive choice:\n\n- `role=\"radiogroup\"` on the container with an `aria-label` so the group has an accessible name (\"Mode selection\").\n- `role=\"radio\"` on each option, with `aria-checked` and a per-option `aria-label` (\"Plan mode\" / \"Act mode\").\n- Roving `tabIndex`: the group is one tab stop and only the currently active option is focusable.\n- `Enter` / `Space` toggles the mode (preserving the existing click behavior).\n- `ArrowLeft` / `ArrowRight` move the selection to the sibling option.\n\nThe change is scoped to the announcement + focus contract from the issue; full arrow-key selection / form-submission semantics inside the group are intentionally left as a follow-up.\n\n## User Impact\n\nUsers who rely on a screen reader (NVDA, VoiceOver, JAWS) to navigate the chat input will now hear the Plan/Act toggle as a single selectable control rather than two unrelated switches, and will be able to determine the active mode from the announcement alone. Keyboard users benefit from the roving `tabIndex`, which keeps the toggle as a single tab stop.\n\n## Evidence\n\n- New component: `apps/vscode/webview-ui/src/components/chat/PlanActModeToggle.tsx`\n- Call-site update: `apps/vscode/webview-ui/src/components/chat/ChatTextArea.tsx` (the inline toggle markup and the unused `SwitchContainer`/`Slider` styled definitions are removed in favor of the new component; tooltip hover behavior is preserved via an `onHover` callback).\n- New test: `apps/vscode/webview-ui/src/components/chat/PlanActModeToggle.test.tsx` asserts the `radiogroup` name, the per-option `aria-checked`/label, the roving `tabIndex`, and the click-to-toggle contract.\n- Local validation:\n  - `bunx tsc --noEmit` is clean in both `apps/vscode` and `apps/vscode/webview-ui`.\n  - `bun run test` passes the full webview-ui suite (64 files, 484 tests).\n  - `bunx biome lint` on the new files reports only one info-level note (`useSemanticElements`) on the styled radio div, which is the documented pattern for this kind of toggle.\n\nFixes #4932",
+      "author_association": "NONE",
+      "user": {
+        "login": "xiaoguomeiyitian"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 12221,
+      "title": "fix(webview): expose Plan/Act toggle as an accessible radiogroup (#4932)",
+      "html_url": "https://github.com/cline/cline/pull/12221",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-07-10T12:51:51Z",
+      "updated_at": "2026-08-19T09:05:39Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "## What\r\n\r\nFixes #4932 - the Plan/Act mode toggle isn't exposed to assistive tech as a single mutually-exclusive control, so a screen-reader user can't tell which mode is active (risking unintended edits in Act mode when they believe they're in Plan).\r\n\r\n## Why (root cause)\r\n\r\nIn `ChatTextArea.tsx` the toggle rendered **two sibling `role=\"switch\"` divs** inside a `SwitchContainer` with no group role and no label. NVDA/VoiceOver announced \"Plan clickable\" / \"Act clickable\" - the mutual exclusivity and active state were never conveyed. PR #4263 added `role=\"switch\"` earlier but the semantic problem (two independent switches, no group) remained.\r\n\r\n## How\r\n\r\nApply the WAI-ARIA radiogroup pattern, minimal and presentational:\r\n- Container -> `role=\"radiogroup\"` + `aria-label=\"Plan/Act mode\"`, made a single keyboard tab stop (`tabIndex={0}`) and operable (`onKeyDown`: Enter/Space -> toggle, `preventDefault` to stop page scroll).\r\n- Each option -> `role=\"radio\"` (was `switch`), keeping `aria-checked`.\r\n- `TooltipTrigger asChild` so `SwitchContainer` *is* the trigger (no redundant button tab stop).\r\n- Added a `:focus-visible` outline so keyboard focus is clearly visible.\r\n\r\nNow announces as \"Plan/Act mode, Plan, radio button, selected\" / \"Act, radio button, not selected\".\r\n\r\n## Testing\r\n\r\n- `cd apps/vscode/webview-ui && npx tsc --noEmit` -> 0 errors\r\n- `npx vitest run` -> 283 passed (the one unrelated `@cline/llms` resolution failure is pre-existing on `main`, from the SDK package not being built locally - confirmed it fails identically without this change)\r\n- `biome check` on the changed file -> clean\r\n- Manual: verified the rendered accessibility tree exposes `radiogroup` + two `radio`s with correct `aria-checked`, a single tab stop lands on the group, and Enter/Space toggles the mode.\r\n\r\n## Impact / regression risk\r\n\r\nPresentational ARIA + keyboard handler only. Click, the `togglePlanActKeys` shortcut, the tooltip, and the visual Slider are all unchanged. No proto/state/dependency changes; one file, +20/-3.\r\n\r\n## Known scoped limitation (open to a follow-up)\r\n\r\nThis delivers correct **announcement + keyboard operability** (the reported bug). It does **not** add arrow-key selection of an individual radio - activation toggles the pair, matching the existing toggle behavior. I can  add full APG arrow-key navigation, or switch the container to a single `role=\"switch\"` if you'd prefer that semantic as a follow-up",
+      "author_association": "CONTRIBUTOR",
+      "user": {
+        "login": "minh2416294"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 12788,
+      "title": "a11y: use radio-group ARIA for Plan/Act mode toggle",
+      "html_url": "https://github.com/cline/cline/pull/12788",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-07-31T16:30:35Z",
+      "updated_at": "2026-07-31T16:30:42Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "## Description\n\nScreen reader users previously could not determine which mode (Plan/Act) was active — the toggle used `role=\"switch\"` on two independent divs without proper grouping or focus management.\n\n## Changes\n- SwitchContainer role: `radiogroup` with `aria-label`\n- Individual labels role: `radio` with proper `aria-checked`\n- ArrowLeft/ArrowRight keyboard navigation between options\n- `tabIndex` management (only active option focusable)\n- `aria-label` on each radio for screen reader context\n\nCloses #4932",
+      "author_association": "NONE",
+      "user": {
+        "login": "muhfauziazhar"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 10377,
+      "title": "fix: expose Plan/Act mode as an accessible radio group",
+      "html_url": "https://github.com/cline/cline/pull/10377",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-04-23T17:46:01Z",
+      "updated_at": "2026-07-31T00:13:33Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "## Summary\n\nFixes #4932.\n\nThis updates the Plan/Act mode picker in the chat composer so assistive technologies see it as a proper radio group instead of generic clickable controls.\n\n## What changed\n\n- refactored the mode-switch handler to support selecting an explicit target mode\n- rendered Plan and Act as `role=\"radio\"` options inside a `radiogroup`\n- added keyboard support for Enter/Space and arrow-key selection\n- added a focused webview test covering accessibility roles and selecting Act mode\n\n## Validation\n\n- `cd webview-ui && npm test -- ChatTextArea.spec.tsx`\n- `cd webview-ui && npx tsc --noEmit`\n- `npx biome check webview-ui/src/components/chat/ChatTextArea.tsx webview-ui/src/components/chat/__tests__/ChatTextArea.spec.tsx --diagnostic-level=error`\n\n## Notes\n\nI only ran targeted validation for the affected webview surface. The repo's full proto generation flow currently requires Rosetta on Apple Silicon, so I avoided claiming a full-project build/test pass that I did not run.\n",
+      "author_association": "NONE",
+      "user": {
+        "login": "toby-bridges"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 12682,
+      "title": "fix(webview): use radiogroup/radio ARIA roles for Plan/Act mode toggle",
+      "html_url": "https://github.com/cline/cline/pull/12682",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-07-29T09:50:41Z",
+      "updated_at": "2026-08-27T10:02:54Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "## What\nFixes #4932. The Plan/Act mode toggle in `ChatTextArea.tsx` was two independent elements each with `role=\"switch\"` and `aria-checked`, so screen readers announced two separate on/off switches instead of one mutually-exclusive selection between Plan and Act. Since Act mode lets the agent edit files directly, not being able to reliably tell which mode is active is a real problem for screen reader users.\n\n## Change\n- `SwitchContainer` (the outer clickable container): `role=\"radiogroup\"`, `aria-label=\"Mode\"`.\n- Each Plan/Act `<div>`: `role=\"switch\"` → `role=\"radio\"`, keeping the existing `aria-checked={mode === m.toLowerCase()}`.\n- The existing `onClick={onModeToggle}` on the container is unchanged and still works correctly — `onModeToggle` already just flips between plan/act based on current state regardless of which side was clicked, so no logic change was needed there.\n- Added `tabIndex={0}` + an `onKeyDown` handler (Enter/Space → `onModeToggle()`) so the toggle is actually reachable and operable by keyboard — it wasn't focusable at all before this change.\n- Added `onFocus`/`onBlur` mirroring the existing `onMouseOver`/`onMouseLeave` tooltip handlers, so a keyboard user tabbing to the control gets the same tooltip a mouse-hover user does. Caught this via the repo's own `biome check`: once the element became focusable, `lint/a11y/useKeyWithMouseEvents` correctly flagged the mouse-only tooltip trigger as an accessibility gap.\n\nNot changed: `biome check` also suggests these could become native `<input type=\"radio\">` elements (`lint/a11y/useSemanticElements`). That would need a larger restructure of this custom-styled slider toggle (checked-state handling, name grouping, different event model) — kept the `role=\"radio\"` `<div>` approach the linked issue itself describes as the fix, to keep this PR small and focused.\n\n## Testing\nNo proto/backend changes — `onModeToggle`/`togglePlanActModeProto` are untouched, only the DOM/ARIA layer changed. Verified:\n- `npx @biomejs/biome check` on the file — clean except the one `useSemanticElements` info noted above (info-level, not an error).\n- `npx @biomejs/biome format` — no formatting changes needed.\n- Grepped the rest of the webview-ui source for `mode-switch` / `role=\"switch\"` / `SwitchContainer` — nothing else references the old markup, so no other tests or code needed updating.\n- Manual accessibility check with an actual screen reader wasn't possible in my environment (no VS Code / screen reader available) — the ARIA semantics themselves (`radiogroup`/`radio`/`aria-checked`/`aria-label`) follow the standard WAI-ARIA radio-group pattern, but a real screen-reader pass would be a good final check before merge.",
+      "author_association": "NONE",
+      "user": {
+        "login": "yottanami"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 13940,
+      "title": "fix(webview): expose Plan/Act toggle as an accessible radiogroup (#4932)",
+      "html_url": "https://github.com/cline/cline/pull/13940",
+      "state": "closed",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-09-08T03:08:50Z",
+      "updated_at": "2026-09-08T09:18:23Z",
+      "closed_at": "2026-09-08T09:18:23Z",
+      "draft": true,
+      "body": "## What Problem This Solves\n\nThe Plan/Act mode toggle in the chat input was rendered as two sibling `<div>` elements, each with `role=\"switch\"` and `aria-checked`. Screen readers therefore announced them as two independent switches rather than a single mutually-exclusive choice, and there was no way to tell from the announcement which mode was active or that the two options were mutually exclusive. See [cline/cline#4932](https://github.com/cline/cline/issues/4932).\n\n## Why This Change Was Made\n\nRestructure the toggle to follow the WAI-ARIA `radiogroup` pattern, which is the correct semantic for a binary mutually-exclusive choice:\n\n- `role=\"radiogroup\"` on the container with an `aria-label` so the group has an accessible name (\"Mode selection\").\n- `role=\"radio\"` on each option, with `aria-checked` and a per-option `aria-label` (\"Plan mode\" / \"Act mode\").\n- Roving `tabIndex`: the group is one tab stop and only the currently active option is focusable.\n- `Enter` / `Space` toggles the mode (preserving the existing click behavior).\n- `ArrowLeft` / `ArrowRight` move the selection to the sibling option.\n\nThe change is scoped to the announcement + focus contract from the issue; full arrow-key selection / form-submission semantics inside the group are intentionally left as a follow-up.\n\n## User Impact\n\nUsers who rely on a screen reader (NVDA, VoiceOver, JAWS) to navigate the chat input will now hear the Plan/Act toggle as a single selectable control rather than two unrelated switches, and will be able to determine the active mode from the announcement alone. Keyboard users benefit from the roving `tabIndex`, which keeps the toggle as a single tab stop.\n\n## Evidence\n\n- New component: `apps/vscode/webview-ui/src/components/chat/PlanActModeToggle.tsx`\n- Call-site update: `apps/vscode/webview-ui/src/components/chat/ChatTextArea.tsx` (the inline toggle markup and the unused `SwitchContainer`/`Slider` styled definitions are removed in favor of the new component; tooltip hover behavior is preserved via an `onHover` callback).\n- New test: `apps/vscode/webview-ui/src/components/chat/PlanActModeToggle.test.tsx` asserts the `radiogroup` name, the per-option `aria-checked`/label, the roving `tabIndex`, and the click-to-toggle contract.\n- Local validation:\n  - `bunx tsc --noEmit` is clean in both `apps/vscode` and `apps/vscode/webview-ui`.\n  - `bun run test` passes the full webview-ui suite (64 files, 484 tests).\n  - `bunx biome lint` on the new files reports only one info-level note (`useSemanticElements`) on the styled radio div, which is the documented pattern for this kind of toggle.\n\nFixes #4932",
+      "author_association": "NONE",
+      "user": {
+        "login": "xiaoguomeiyitian"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 10475,
+      "title": "fix(webview): add ARIA attributes to plan/act mode toggle for screen readers",
+      "html_url": "https://github.com/cline/cline/pull/10475",
+      "state": "closed",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-04-30T10:28:31Z",
+      "updated_at": "2026-07-31T01:04:04Z",
+      "closed_at": "2026-07-31T01:04:04Z",
+      "draft": false,
+      "body": "## Summary\n- Add `aria-label` announcing current mode to screen readers\n- Add `role='switch'` and `aria-checked` for proper switch semantics\n- Add `tabIndex=0` to make toggle keyboard focusable\n- Add `onKeyDown` handler for Enter/Space activation\n- Add `aria-hidden` to child elements to prevent duplicate announcements\n\nAccessibility improvements for users who rely on screen readers to determine the current plan/act mode.\n\nFixes #4932",
+      "author_association": "NONE",
+      "user": {
+        "login": "himax12"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 8996,
+      "title": "fix: use correct ARIA roles for Plan/Act mode toggle accessibility",
+      "html_url": "https://github.com/cline/cline/pull/8996",
+      "state": "closed",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-01-31T15:56:45Z",
+      "updated_at": "2026-08-06T21:30:46Z",
+      "closed_at": "2026-08-06T21:30:45Z",
+      "draft": false,
+      "body": "## Summary\n- Fixes #4932\n- Changed the Plan/Act mode toggle from `role=\"switch\"` to proper radio button semantics\n- Screen readers now correctly announce the toggle state (e.g., \"Plan, radio button, checked\")\n\n## Changes\n1. Added `role=\"radiogroup\"` to the SwitchContainer (the parent element)\n2. Changed individual Plan/Act options from `role=\"switch\"` to `role=\"radio\"`\n3. Added missing `key` prop to mapped elements\n\n## Why radio instead of switch?\n- `role=\"switch\"` is semantically for binary on/off toggles (like a checkbox)\n- `role=\"radio\"` within a `role=\"radiogroup\"` is for mutually exclusive options\n- Plan and Act are mutually exclusive options, making radio semantics more appropriate\n\n## Test plan\n- [x] Verified compilation passes (`npm run compile`)\n- [ ] Manual test with screen reader (VoiceOver/NVDA): navigate to Plan/Act toggle, verify it announces \"Plan, radio button, checked\" or \"Act, radio button, not checked\"\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n<!-- ELLIPSIS_HIDDEN -->\n\n----\n\n> [!IMPORTANT]\n> Fix accessibility of Plan/Act toggle by using correct ARIA roles and address minor UI and path handling issues.\n> \n>   - **Accessibility**:\n>     - Change `role` of Plan/Act mode toggle in `ChatTextArea.tsx` from `switch` to `radio` within a `radiogroup`.\n>     - Add `key` prop to mapped elements in `ChatTextArea.tsx`.\n>   - **Path Handling**:\n>     - Replace `string.includes()` with `isLocatedInPath()` in `getReadablePath()` in `path.ts` to fix false positives.\n>   - **UI Fixes**:\n>     - Fix delete button visibility for favorited items in `HistoryViewItem.tsx`.\n>     - Fix star button alignment for long prompts in `HistoryViewItem.tsx`.\n> \n> <sup>This description was created by </sup>[<img alt=\"Ellipsis\" src=\"https://img.shields.io/badge/Ellipsis-blue?color=175173\">](https://www.ellipsis.dev?ref=cline%2Fcline&utm_source=github&utm_medium=referral)<sup> for 1168611b20781c131fe2aed28e9806de9f74ee42. You can [customize](https://app.ellipsis.dev/cline/settings/summaries) this summary. It will automatically update as commits are pushed.</sup>\n\n<!-- ELLIPSIS_HIDDEN -->",
+      "author_association": "CONTRIBUTOR",
+      "user": {
+        "login": "YuriNachos"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 11298,
+      "title": "fix(a11y): use radio group ARIA roles for Plan/Act mode toggle",
+      "html_url": "https://github.com/cline/cline/pull/11298",
+      "state": "closed",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-06-05T06:24:04Z",
+      "updated_at": "2026-08-03T20:24:11Z",
+      "closed_at": "2026-08-03T20:24:11Z",
+      "draft": false,
+      "body": "Screen readers announced the Plan/Act buttons as \"clickable\" with no state information. Replace the incorrect role=\"switch\" with a proper role=\"radiogroup\" container and role=\"radio\" items so assistive technology announces e.g. \"Plan, radio button, checked\" / \"Act, radio button, not checked\".\r\n\r\nChanges:\r\n- SwitchContainer gets role=\"radiogroup\" + aria-label=\"Cline mode\"\r\n- Each option div gets role=\"radio\", aria-checked, aria-label, tabIndex (checked item tabIndex=0, unchecked -1 per roving-tabindex pattern)\r\n- Container onKeyDown handles ArrowLeft/Up → Plan, ArrowRight/Down → Act\r\n- Each radio also responds to Space/Enter to select that specific mode\r\n- Refactor: extract setMode(target) helper so both click and keyboard can set a specific mode; onModeToggle now delegates to setMode\r\n\r\nCloses #4932\r\n\r\n<!--\r\nThank you for contributing to Cline!\r\n\r\n⚠️ Important: Before submitting this PR, please ensure you have:\r\n- For feature requests: Created a discussion in our Feature Requests discussions board https://github.com/cline/cline/discussions/categories/feature-requests and received approval from core maintainers before implementation\r\n- For all changes: Link the associated issue/discussion in the \"Related Issue\" section below\r\n\r\nLimited exceptions:\r\nSmall bug fixes, typo corrections, minor wording improvements, or simple type fixes that don't change functionality may be submitted directly without prior discussion.\r\n\r\nWhy this requirement?\r\nWe deeply appreciate all community contributions - they are essential to Cline's success! To ensure the best use of everyone's time and maintain project direction, we use our Feature Requests discussions board to gauge community interest and validate feature ideas before implementation begins. This helps us focus development efforts on features that will benefit the most users.\r\n-->\r\n\r\n### Related Issue\r\n\r\n<!-- Replace XXXX with the issue number that this PR addresses -->\r\n**Issue:** #XXXX\r\n\r\n### Description\r\n\r\n<!-- \r\nHelp reviewers understand your changes by making this PR readable and well-organized:\r\n\r\n- What problem does this PR solve?\r\n- Why were these changes introduced and what purpose do they serve?\r\n- For larger changes, provide context about your approach and reasoning\r\n\r\nSmall PRs may need minimal description, but larger changes benefit from explaining where you're coming from. Much of this context can be in the linked issue above, so feel free to reference it rather than repeating everything here.\r\n-->\r\n\r\n### Test Procedure\r\n\r\n<!-- \r\nPlease walk us through your testing approach and thought process. This helps reviewers understand that you've thoroughly considered the impact of your changes:\r\n\r\n- How did you test this change?\r\n- What could potentially break and how did you verify it doesn't?\r\n- What existing functionality might be affected and how did you check it still works?\r\n- Why are you confident this is ready for merge?\r\n\r\nWe're not looking for exhaustive documentation - just evidence that you've thought through the implications of your changes and tested accordingly.\r\n-->\r\n\r\n### Type of Change\r\n\r\n<!-- Put an 'x' in all boxes that apply -->\r\n\r\n-   [ ] 🐛 Bug fix (non-breaking change which fixes an issue)\r\n-   [ ] ✨ New feature (non-breaking change which adds functionality)\r\n-   [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)\r\n-   [ ] ♻️ Refactor Changes\r\n-   [ ] 💅 Cosmetic Changes\r\n-   [ ] 📚 Documentation update\r\n-   [ ] 🏃 Workflow Changes\r\n\r\n### Pre-flight Checklist\r\n\r\n<!-- Put an 'x' in all boxes that apply -->\r\n\r\n-   [ ] Changes are limited to a single feature, bugfix or chore (split larger changes into separate PRs)\r\n-   [ ] Tests are passing (`npm test`) and code is formatted and linted (`npm run format && npm run lint`)\r\n-   [ ] I have reviewed [contributor guidelines](https://github.com/cline/cline/blob/main/CONTRIBUTING.md)\r\n\r\n### Screenshots\r\n\r\n<!-- \r\nHelp reviewers quickly understand your changes:\r\n\r\n- **UI Changes**: Please include screenshots showing before/after states\r\n- **Complex Workflows**: Consider uploading a screen recording (video) if your changes involve multiple steps or state transitions\r\n- **Backend Changes**: Not required, but feel free to include terminal output or other evidence that demonstrates functionality\r\n\r\nThis helps reviewers see what you've built without having to pull down and test your branch first.\r\n-->\r\n\r\n### Additional Notes\r\n\r\n<!-- Add any additional notes for reviewers -->\r\n",
+      "author_association": "NONE",
+      "user": {
+        "login": "chatman-media"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 10868,
+      "title": "chore(deps): bump hono from 4.12.9 to 4.12.19",
+      "html_url": "https://github.com/cline/cline/pull/10868",
+      "state": "closed",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-05-18T20:34:13Z",
+      "updated_at": "2026-05-19T16:56:33Z",
+      "closed_at": "2026-05-19T16:56:31Z",
+      "draft": false,
+      "body": "Bumps [hono](https://github.com/honojs/hono) from 4.12.9 to 4.12.19.\n<details>\n<summary>Release notes</summary>\n<p><em>Sourced from <a href=\"https://github.com/honojs/hono/releases\">hono's releases</a>.</em></p>\n<blockquote>\n<h2>v4.12.19</h2>\n<h2>What's Changed</h2>\n<ul>\n<li>ci: pin GitHub Actions to SHAs by <a href=\"https://github.com/yusukebe\"><code>@​yusukebe</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4932\">honojs/hono#4932</a></li>\n<li>fix(serveStatic): make options parameter optional in all adapters by <a href=\"https://github.com/mixelburg\"><code>@​mixelburg</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4934\">honojs/hono#4934</a></li>\n<li>fix(cookie): return the first cookie when there are multiple cookies with the same name by <a href=\"https://github.com/usualoma\"><code>@​usualoma</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4922\">honojs/hono#4922</a></li>\n<li>feat(bearer-auth): make bearerAuth generic for typed context in verifyToken by <a href=\"https://github.com/justinnais\"><code>@​justinnais</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4913\">honojs/hono#4913</a></li>\n<li>feat(cache): key cache entries by configured vary headers by <a href=\"https://github.com/usualoma\"><code>@​usualoma</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4915\">honojs/hono#4915</a></li>\n<li>feat(request): add <code>bytes()</code> by <a href=\"https://github.com/yusukebe\"><code>@​yusukebe</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4921\">honojs/hono#4921</a></li>\n<li>fix(stream): upgrade <code>@hono/node-server</code> to v2 and fix abort handling by <a href=\"https://github.com/yusukebe\"><code>@​yusukebe</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4940\">honojs/hono#4940</a></li>\n</ul>\n<h2>New Contributors</h2>\n<ul>\n<li><a href=\"https://github.com/justinnais\"><code>@​justinnais</code></a> made their first contribution in <a href=\"https://redirect.github.com/honojs/hono/pull/4913\">honojs/hono#4913</a></li>\n</ul>\n<p><strong>Full Changelog</strong>: <a href=\"https://github.com/honojs/hono/compare/v4.12.18...v4.12.19\">https://github.com/honojs/hono/compare/v4.12.18...v4.12.19</a></p>\n<h2>v4.12.18</h2>\n<h2>Security fixes</h2>\n<p>This release includes fixes for the following security issues:</p>\n<h3>Cache Middleware ignores Vary: Authorization / Vary: Cookie leading to cross-user cache leakage</h3>\n<p>Affects: Cache Middleware. Fixes missing cache-skip handling for <code>Vary: Authorization</code> and <code>Vary: Cookie</code>, where a response cached for one authenticated user could be served to other users. GHSA-p77w-8qqv-26rm</p>\n<h3>CSS Declaration Injection via Style Object Values in JSX SSR</h3>\n<p>Affects: hono/jsx. Fixes a missing CSS-context escape for <code>style</code> object values and property names, where untrusted input could inject additional CSS declarations. The impact is limited to CSS and does not allow JavaScript execution. GHSA-qp7p-654g-cw7p</p>\n<h3>Improper validation of NumericDate claims (exp, nbf, iat) in JWT verify()</h3>\n<p>Affects: <code>hono/utils/jwt</code>. Fixes improper validation of <code>exp</code>, <code>nbf</code>, and <code>iat</code> claims, where falsy, non-finite, or non-numeric values could silently bypass time-based checks instead of being rejected per RFC 7519. GHSA-hm8q-7f3q-5f36</p>\n<hr />\n<p>Users who use the JWT helper, hono/jsx, or the Cache middleware are strongly encouraged to upgrade to this version.</p>\n<h2>v4.12.17</h2>\n<h2>What's Changed</h2>\n<ul>\n<li>fix(jsx): normalize SVG attributes on the <!-- raw HTML omitted --> root element by <a href=\"https://github.com/kfly8\"><code>@​kfly8</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4893\">honojs/hono#4893</a></li>\n<li>fix(ssg): add <code>atom+xml</code> and <code>rss+xml</code> to <code>defaultExtensionMap</code> by <a href=\"https://github.com/yuintei\"><code>@​yuintei</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4899\">honojs/hono#4899</a></li>\n<li>fix(cors): make origin optional in CORSOptions by <a href=\"https://github.com/truffle-dev\"><code>@​truffle-dev</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4905\">honojs/hono#4905</a></li>\n<li>fix(types): propagate middleware response types to app.on overloads by <a href=\"https://github.com/T4ko0522\"><code>@​T4ko0522</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4906\">honojs/hono#4906</a></li>\n</ul>\n<h2>New Contributors</h2>\n<ul>\n<li><a href=\"https://github.com/kfly8\"><code>@​kfly8</code></a> made their first contribution in <a href=\"https://redirect.github.com/honojs/hono/pull/4893\">honojs/hono#4893</a></li>\n<li><a href=\"https://github.com/truffle-dev\"><code>@​truffle-dev</code></a> made their first contribution in <a href=\"https://redirect.github.com/honojs/hono/pull/4905\">honojs/hono#4905</a></li>\n</ul>\n<p><strong>Full Changelog</strong>: <a href=\"https://github.com/honojs/hono/compare/v4.12.16...v4.12.17\">https://github.com/honojs/hono/compare/v4.12.16...v4.12.17</a></p>\n<h2>v4.12.16</h2>\n<!-- raw HTML omitted -->\n</blockquote>\n<p>... (truncated)</p>\n</details>\n<details>\n<summary>Commits</summary>\n<ul>\n<li><a href=\"https://github.com/honojs/hono/commit/7e62bcd22fa4e8f0e83cb564bac85e32f5434dd3\"><code>7e62bcd</code></a> 4.12.19</li>\n<li><a href=\"https://github.com/honojs/hono/commit/e2f252a8745eb25f06485b8d43e8410bf027c8ef\"><code>e2f252a</code></a> fix(stream): upgrade <code>@hono/node-server</code> to v2 and fix abort handling (<a href=\"https://redirect.github.com/honojs/hono/issues/4940\">#4940</a>)</li>\n<li><a href=\"https://github.com/honojs/hono/commit/54f2f0cfdae64055ea58ab0372f854c35a780290\"><code>54f2f0c</code></a> feat(request): add <code>bytes()</code> (<a href=\"https://redirect.github.com/honojs/hono/issues/4921\">#4921</a>)</li>\n<li><a href=\"https://github.com/honojs/hono/commit/e59db594fbd22dd29e398846f9fb1e0447efefda\"><code>e59db59</code></a> feat(cache): key cache entries by configured vary headers (<a href=\"https://redirect.github.com/honojs/hono/issues/4915\">#4915</a>)</li>\n<li><a href=\"https://github.com/honojs/hono/commit/48a7ccbc0eca7df63e4f4aca6d94d9fbe68fa0d8\"><code>48a7ccb</code></a> feat(bearer-auth): make bearerAuth generic for typed context in verifyToken (...</li>\n<li><a href=\"https://github.com/honojs/hono/commit/ff7522fdccef4a55f6aa326ece705c0cd7cd8031\"><code>ff7522f</code></a> fix(cookie): return the first cookie when there are multiple cookies with the...</li>\n<li><a href=\"https://github.com/honojs/hono/commit/26f8c33f23e6151873d165107f2dbcadf1204d15\"><code>26f8c33</code></a> fix(serveStatic): make options parameter optional in all adapters (<a href=\"https://redirect.github.com/honojs/hono/issues/4934\">#4934</a>)</li>\n<li><a href=\"https://github.com/honojs/hono/commit/16c4e3885f51376cb6cbddc80eeae0202cd86234\"><code>16c4e38</code></a> ci: pin GitHub Actions to SHAs (<a href=\"https://redirect.github.com/honojs/hono/issues/4932\">#4932</a>)</li>\n<li><a href=\"https://github.com/honojs/hono/commit/f10dee89ced5956b73c1cdc416d6bc0fd54d63b7\"><code>f10dee8</code></a> 4.12.18</li>\n<li><a href=\"https://github.com/honojs/hono/commit/a5bd9ebead279ed9d0239ecbd854f629edfc0e57\"><code>a5bd9eb</code></a> Merge commit from fork</li>\n<li>Additional commits viewable in <a href=\"https://github.com/honojs/hono/compare/v4.12.9...v4.12.19\">compare view</a></li>\n</ul>\n</details>\n<br />\n\n\n[![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=hono&package-manager=npm_and_yarn&previous-version=4.12.9&new-version=4.12.19)](https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores)\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n[//]: # (dependabot-automerge-start)\n[//]: # (dependabot-automerge-end)\n\n---\n\n<details>\n<summary>Dependabot commands and options</summary>\n<br />\n\nYou can trigger Dependabot actions by commenting on this PR:\n- `@dependabot rebase` will rebase this PR\n- `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n- `@dependabot show <dependency name> ignore conditions` will show all of the ignore conditions of the specified dependency\n- `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n- `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n- `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\nYou can disable automated security fix PRs for this repo from the [Security Alerts page](https://github.com/cline/cline/network/alerts).\n\n</details>",
+      "author_association": "CONTRIBUTOR",
+      "user": {
+        "login": "dependabot[bot]"
+      },
+      "assignees": [],
+      "labels": [
+        {
+          "name": "dependencies"
+        },
+        {
+          "name": "javascript"
+        }
+      ],
+      "pull_request": {
+        "merged_at": null
+      }
+    },
+    {
+      "number": 10899,
+      "title": "build(deps): bump hono from 4.12.9 to 4.12.21",
+      "html_url": "https://github.com/cline/cline/pull/10899",
+      "state": "closed",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-05-19T16:56:23Z",
+      "updated_at": "2026-05-22T20:06:55Z",
+      "closed_at": "2026-05-22T20:06:52Z",
+      "draft": false,
+      "body": "Bumps [hono](https://github.com/honojs/hono) from 4.12.9 to 4.12.21.\n<details>\n<summary>Release notes</summary>\n<p><em>Sourced from <a href=\"https://github.com/honojs/hono/releases\">hono's releases</a>.</em></p>\n<blockquote>\n<h2>v4.12.21</h2>\n<h2>Security fixes</h2>\n<p>This release includes fixes for the following security issues:</p>\n<h3>app.mount() strips mount prefix using undecoded path, causing incorrect routing for percent-encoded paths</h3>\n<p>Affects: <code>app.mount()</code>. Fixes prefix stripping using the raw URL pathname instead of the decoded path, where percent-encoded characters in the mount prefix or path could cause the prefix to be removed at the wrong position, resulting in the sub-application receiving an incorrect path. GHSA-2gcr-mfcq-wcc3</p>\n<h3>IP Restriction bypasses static deny rules for non-canonical IPv6</h3>\n<p>Affects: <code>hono/ip-restriction</code>. Fixes IP address comparison using string equality, where non-canonical IPv6 representations of a denied address — such as compressed forms or hex-notation IPv4-mapped addresses — could bypass static deny rules. GHSA-xrhx-7g5j-rcj5</p>\n<h3>Cookie helper does not sanitize sameSite and priority, allowing Set-Cookie injection</h3>\n<p>Affects: <code>hono/cookie</code>. Fixes missing validation of <code>sameSite</code> and <code>priority</code> options against injection characters (<code>;</code>, <code>\\r</code>, <code>\\n</code>), where user-controlled input passed to either option could inject additional attributes into the Set-Cookie response header. GHSA-3hrh-pfw6-9m5x</p>\n<h3>JWT middleware accepts any Authorization scheme, not only Bearer</h3>\n<p>Affects: <code>hono/jwt</code>, <code>hono/jwk</code>. Fixes missing scheme validation in the Authorization header, where any two-part header value was accepted regardless of the scheme name, allowing non-Bearer schemes to pass JWT authentication. GHSA-f577-qrjj-4474</p>\n<hr />\n<p>Users who use <code>app.mount()</code>, <code>hono/ip-restriction</code>, <code>hono/cookie</code>, or <code>hono/jwt</code>/<code>hono/jwk</code> are encouraged to upgrade to this version.</p>\n<h2>v4.12.20</h2>\n<h2>What's Changed</h2>\n<ul>\n<li>fix(route): preserve the base path of the mounted route() app by <a href=\"https://github.com/usualoma\"><code>@​usualoma</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4942\">honojs/hono#4942</a></li>\n<li>fix(jsx): widen jsx and jsxFn children to Child[] by <a href=\"https://github.com/ashunar0\"><code>@​ashunar0</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4947\">honojs/hono#4947</a></li>\n</ul>\n<h2>New Contributors</h2>\n<ul>\n<li><a href=\"https://github.com/ashunar0\"><code>@​ashunar0</code></a> made their first contribution in <a href=\"https://redirect.github.com/honojs/hono/pull/4947\">honojs/hono#4947</a></li>\n</ul>\n<p><strong>Full Changelog</strong>: <a href=\"https://github.com/honojs/hono/compare/v4.12.19...v4.12.20\">https://github.com/honojs/hono/compare/v4.12.19...v4.12.20</a></p>\n<h2>v4.12.19</h2>\n<h2>What's Changed</h2>\n<ul>\n<li>ci: pin GitHub Actions to SHAs by <a href=\"https://github.com/yusukebe\"><code>@​yusukebe</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4932\">honojs/hono#4932</a></li>\n<li>fix(serveStatic): make options parameter optional in all adapters by <a href=\"https://github.com/mixelburg\"><code>@​mixelburg</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4934\">honojs/hono#4934</a></li>\n<li>fix(cookie): return the first cookie when there are multiple cookies with the same name by <a href=\"https://github.com/usualoma\"><code>@​usualoma</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4922\">honojs/hono#4922</a></li>\n<li>feat(bearer-auth): make bearerAuth generic for typed context in verifyToken by <a href=\"https://github.com/justinnais\"><code>@​justinnais</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4913\">honojs/hono#4913</a></li>\n<li>feat(cache): key cache entries by configured vary headers by <a href=\"https://github.com/usualoma\"><code>@​usualoma</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4915\">honojs/hono#4915</a></li>\n<li>feat(request): add <code>bytes()</code> by <a href=\"https://github.com/yusukebe\"><code>@​yusukebe</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4921\">honojs/hono#4921</a></li>\n<li>fix(stream): upgrade <code>@hono/node-server</code> to v2 and fix abort handling by <a href=\"https://github.com/yusukebe\"><code>@​yusukebe</code></a> in <a href=\"https://redirect.github.com/honojs/hono/pull/4940\">honojs/hono#4940</a></li>\n</ul>\n<h2>New Contributors</h2>\n<ul>\n<li><a href=\"https://github.com/justinnais\"><code>@​justinnais</code></a> made their first contribution in <a href=\"https://redirect.github.com/honojs/hono/pull/4913\">honojs/hono#4913</a></li>\n</ul>\n<p><strong>Full Changelog</strong>: <a href=\"https://github.com/honojs/hono/compare/v4.12.18...v4.12.19\">https://github.com/honojs/hono/compare/v4.12.18...v4.12.19</a></p>\n<!-- raw HTML omitted -->\n</blockquote>\n<p>... (truncated)</p>\n</details>\n<details>\n<summary>Commits</summary>\n<ul>\n<li><a href=\"https://github.com/honojs/hono/commit/a83ddb882e0c0b8c336050dba087bb2e1b12488e\"><code>a83ddb8</code></a> 4.12.21</li>\n<li><a href=\"https://github.com/honojs/hono/commit/6cbb025ff87fca1a3d00d0ccca0eaf3a6385c3f1\"><code>6cbb025</code></a> Merge commit from fork</li>\n<li><a href=\"https://github.com/honojs/hono/commit/c831020fb1fa2e929d222f6c84e1abfe013e512b\"><code>c831020</code></a> Merge commit from fork</li>\n<li><a href=\"https://github.com/honojs/hono/commit/905aedbc20661e0e2fa378783a7ec44a5c3df43d\"><code>905aedb</code></a> Merge commit from fork</li>\n<li><a href=\"https://github.com/honojs/hono/commit/5463db2735476959b8af67756f4e513f4fe19115\"><code>5463db2</code></a> Merge commit from fork</li>\n<li><a href=\"https://github.com/honojs/hono/commit/c657a39ccc8d3194d345d9e82c8587bd25b5b6e8\"><code>c657a39</code></a> 4.12.20</li>\n<li><a href=\"https://github.com/honojs/hono/commit/eb2d0c238adbcee5933d0f8c15f1a65a88f50565\"><code>eb2d0c2</code></a> fix(jsx): widen jsx and jsxFn children to Child[] (<a href=\"https://redirect.github.com/honojs/hono/issues/4947\">#4947</a>)</li>\n<li><a href=\"https://github.com/honojs/hono/commit/dcabbece347817ef7193439c39d28546b8ac3a85\"><code>dcabbec</code></a> fix(route): preserve the base path of the mounted route() app (<a href=\"https://redirect.github.com/honojs/hono/issues/4942\">#4942</a>)</li>\n<li><a href=\"https://github.com/honojs/hono/commit/7e62bcd22fa4e8f0e83cb564bac85e32f5434dd3\"><code>7e62bcd</code></a> 4.12.19</li>\n<li><a href=\"https://github.com/honojs/hono/commit/e2f252a8745eb25f06485b8d43e8410bf027c8ef\"><code>e2f252a</code></a> fix(stream): upgrade <code>@hono/node-server</code> to v2 and fix abort handling (<a href=\"https://redirect.github.com/honojs/hono/issues/4940\">#4940</a>)</li>\n<li>Additional commits viewable in <a href=\"https://github.com/honojs/hono/compare/v4.12.9...v4.12.21\">compare view</a></li>\n</ul>\n</details>\n<br />\n\n\n[![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=hono&package-manager=npm_and_yarn&previous-version=4.12.9&new-version=4.12.21)](https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores)\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n[//]: # (dependabot-automerge-start)\n[//]: # (dependabot-automerge-end)\n\n---\n\n<details>\n<summary>Dependabot commands and options</summary>\n<br />\n\nYou can trigger Dependabot actions by commenting on this PR:\n- `@dependabot rebase` will rebase this PR\n- `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n- `@dependabot show <dependency name> ignore conditions` will show all of the ignore conditions of the specified dependency\n- `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n- `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n- `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\nYou can disable automated security fix PRs for this repo from the [Security Alerts page](https://github.com/cline/cline/network/alerts).\n\n</details>",
+      "author_association": "CONTRIBUTOR",
+      "user": {
+        "login": "dependabot[bot]"
+      },
+      "assignees": [],
+      "labels": [
+        {
+          "name": "dependencies"
+        },
+        {
+          "name": "javascript"
+        }
+      ],
+      "pull_request": {
+        "merged_at": null
+      }
+    }
+  ]
+}

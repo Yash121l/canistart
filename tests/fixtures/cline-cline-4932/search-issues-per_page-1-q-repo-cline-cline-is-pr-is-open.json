@@ -1,0 +1,27 @@
+{
+  "total_count": 537,
+  "items": [
+    {
+      "number": 14090,
+      "title": "fix(desktop): make Cline and Cline Pass sign-out stick",
+      "html_url": "https://github.com/cline/cline/pull/14090",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-09-12T22:41:44Z",
+      "updated_at": "2026-09-12T23:01:41Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "### Related Issue\n\nUser reports that signing out of the Cline account (Cline usage / Cline Pass) in the desktop app does not stick.\n\n### Description\n\nThe desktop app has two ways to sign out of Cline, and two separate bugs kept users signed in:\n\n1. **Providers page > Cline > Sign out** sends `enabled: false`, which deletes the `cline` entry from `providers.json`. `ProviderSettingsManager` re-runs the legacy import on every construction (i.e. every sidecar command) and re-adds `cline` from the classic VS Code extension's `~/.cline/data/secrets.json` (`cline:clineAccountId` / `clineApiKey`). This is the same root cause as the ChatGPT/Codex sign-out fix in #14040, which only cleared the Codex secret.\n\n2. **Providers page > Cline Pass > Sign out** did nothing at all. `cline-pass` is registered with `storageProviderId: \"cline\"`, so its credentials live under the `cline` entry; deleting only the `cline-pass` entry left the account signed in.\n\n(The Account page > Sign out path blanks the auth block but keeps the entry, so it was never affected.)\n\nChanges, all in `apps/examples/desktop-app/sidecar`:\n\n- `legacy-codex-credentials.ts` -> `legacy-provider-credentials.ts`: `clearLegacyCodexCredentials()` becomes `clearLegacyProviderCredentials(providerId)` driven by a small provider-to-secret-keys map (`openai-codex`, `cline`). Same semantics otherwise: missing/unparseable file is a no-op, failed write throws so the webview reports the sign-out as failed.\n- `commands.ts` `save_provider_settings`: when a provider is disabled, also disable its `storageProviderId` if different (Cline Pass -> Cline), then clear that provider's legacy secrets.\n\n### Test Procedure\n\n- Extended `legacy-provider-credentials.test.ts` to cover the `cline` keys and an unknown provider id.\n- `bun run test:sidecar` (26 files, 306 tests) passes; `tsc -p tsconfig.dev.json --noEmit` and `biome check` are clean on the changed files.\n- End-to-end check through the real `handleCommand` with `CLINE_DATA_DIR` pointed at a temp dir seeded with a legacy `secrets.json`:\n\n```\n0) fresh open (legacy import): providers= [ \"cline\", \"openrouter\" ] clineToken= legacy-id-token clinePassToken= legacy-id-token\n1) after Cline sign-out, next command: providers= [ \"openrouter\", \"cline\" ] clineToken= undefined clinePassToken= undefined\n   secrets.json now: { \"openRouterApiKey\": \"sk-or-keep\" }\n2) signed in with cline + cline-pass: providers= [ \"openrouter\", \"cline\", \"cline-pass\" ] clineToken= fresh clinePassToken= fresh\n3) after Cline Pass sign-out, next command: providers= [ \"openrouter\", \"cline\" ] clineToken= undefined clinePassToken= undefined\n```\n\nBefore this change, step 1 came back with `clineToken= legacy-id-token` and step 3 with `clinePassToken= fresh`.\n\n### Type of Change\n\n-   [x] 🐛 Bug fix (non-breaking change which fixes an issue)\n\n### Pre-flight Checklist\n\n-   [x] Changes are limited to a single feature, bugfix or chore (split larger changes into separate PRs)\n-   [x] Tests are passing (`bun test`) and code is formatted and linted (`bun run format && bun run lint`)\n-   [x] I have reviewed [contributor guidelines](https://github.com/cline/cline/blob/main/CONTRIBUTING.md)\n\n### Additional Notes\n\nThe underlying issue remains that the legacy import runs on every `ProviderSettingsManager` construction; an import-once approach was tried and reverted inside #14040, so per-provider secret clearing is the pragmatic patch until the legacy import is retired.",
+      "author_association": "CONTRIBUTOR",
+      "user": {
+        "login": "saoudrizwan"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    }
+  ]
+}

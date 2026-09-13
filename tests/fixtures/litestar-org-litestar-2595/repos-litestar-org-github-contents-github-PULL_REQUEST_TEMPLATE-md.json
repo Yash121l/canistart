@@ -1,0 +1,6 @@
+{
+  "path": ".github/PULL_REQUEST_TEMPLATE.md",
+  "html_url": "https://github.com/litestar-org/.github/blob/main/.github/PULL_REQUEST_TEMPLATE.md",
+  "encoding": "utf-8",
+  "content": "<!--\nBy submitting this pull request, you agree to:\n- follow [Litestar's Code of Conduct](https://github.com/litestar-org/.github/blob/main/CODE_OF_CONDUCT.md)\n- follow [Litestar's contribution guidelines](https://github.com/litestar-org/.github/blob/main/CONTRIBUTING.md)\n- follow [Litestar's AI Policy](https://github.com/litestar-org/.github/blob/main/AI_POLICY.md)\n- follow the [PSFs's Code of Conduct](https://www.python.org/psf/conduct/)\n-->\n## Description\n\n-\n\n<!--\nPlease add in issue numbers this pull request will close, if applicable\nExamples: Fixes #4321 or Closes #1234\n\nEnsure you are using a supported keyword to properly link an issue:\nhttps://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword\n-->\n"
+}

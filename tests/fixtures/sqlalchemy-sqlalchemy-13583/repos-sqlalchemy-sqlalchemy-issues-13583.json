@@ -1,0 +1,28 @@
+{
+  "number": 13583,
+  "title": "aliased() of an aliased CTE / aliased subquery entity drops the selectable; CTE.alias() of an alias renders undefined name (2.0.x / 2.1 fix)",
+  "html_url": "https://github.com/sqlalchemy/sqlalchemy/issues/13583",
+  "state": "open",
+  "state_reason": null,
+  "locked": false,
+  "created_at": "2026-09-11T15:42:07Z",
+  "updated_at": "2026-09-12T03:54:37Z",
+  "closed_at": null,
+  "body": "Sub-issue of #13581, covering the part of that issue that can be fixed in 2.0.x and 2.1 without changing behavior for existing correct usage. See #13581 for the full report, reproduction and analysis.\n\n### Scope\n\n**ORM**: `aliased()` with no explicit selectable, called against an existing `aliased()` entity, aliases that entity's own selectable instead of the mapped table when the selectable is anything other than plain aliases of the mapped table:\n\n* a CTE, or an alias of a CTE\n* an alias of a subquery, i.e. `aliased()` applied a second time\n* a lateral subquery\n* a table sample\n\nIn addition:\n\n* `name=` is applied when the existing selectable is a subquery (currently ignored)\n* the `adapt_on_names` setting of the existing entity is carried along\n\nEntities that are only aliases of the mapped table, including flat aliases of joined inheritance, keep their current code path, so rendered SQL and anonymous alias names are unchanged.\n\n**Core**:\n\n* `cte.alias(\"a1\").alias(\"a2\")` renders `c AS a2` against the original CTE, rather than `a1 AS a2`, which refers to a name not present in the WITH clause\n* `Join._anonymous_fromclause(name=..., flat=True)` against a join of anonymously named aliases no longer embeds the anonymous label within a literal name, which failed with `KeyError` at execution\n\n### Not in scope\n\n`aliased()` against a `with_polymorphic()` entity keeps its current behavior in 2.0.x and 2.1, and that behavior is pinned by tests. It is deprecated in #13582 and changed in 2.2 in a separate sub-issue of #13581.\n",
+  "author_association": "MEMBER",
+  "user": {
+    "login": "zzzeek"
+  },
+  "assignees": [],
+  "labels": [
+    {
+      "name": "bug"
+    },
+    {
+      "name": "orm"
+    },
+    {
+      "name": "sql"
+    }
+  ]
+}

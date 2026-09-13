@@ -1,0 +1,49 @@
+{
+  "workflows": [
+    {
+      "name": "Node.js CI",
+      "path": ".github/workflows/node.js.yml",
+      "html_url": "https://github.com/meriyah/meriyah/blob/main/.github/workflows/node.js.yml"
+    },
+    {
+      "name": "Publish Package",
+      "path": ".github/workflows/publish.yml",
+      "html_url": "https://github.com/meriyah/meriyah/blob/main/.github/workflows/publish.yml"
+    },
+    {
+      "name": "Update test262",
+      "path": ".github/workflows/update-test262.yml",
+      "html_url": "https://github.com/meriyah/meriyah/blob/main/.github/workflows/update-test262.yml"
+    },
+    {
+      "name": "Copilot",
+      "path": "dynamic/agents/copilot-pull-request-reviewer",
+      "html_url": "https://github.com/meriyah/meriyah/actions/workflows/agents/copilot-pull-request-reviewer"
+    },
+    {
+      "name": "Copilot cloud agent",
+      "path": "dynamic/copilot-swe-agent/copilot",
+      "html_url": "https://github.com/meriyah/meriyah/actions/workflows/copilot-swe-agent/copilot"
+    },
+    {
+      "name": "Dependabot Updates",
+      "path": "dynamic/dependabot/dependabot-updates",
+      "html_url": "https://github.com/meriyah/meriyah/actions/workflows/dependabot/dependabot-updates"
+    },
+    {
+      "name": "CodeQL - Code Quality",
+      "path": "dynamic/github-code-quality/codeql",
+      "html_url": "https://github.com/meriyah/meriyah/actions/workflows/github-code-quality/codeql"
+    },
+    {
+      "name": "CodeQL",
+      "path": "dynamic/github-code-scanning/codeql",
+      "html_url": "https://github.com/meriyah/meriyah/actions/workflows/github-code-scanning/codeql"
+    },
+    {
+      "name": "pages-build-deployment",
+      "path": "dynamic/pages/pages-build-deployment",
+      "html_url": "https://github.com/meriyah/meriyah/actions/workflows/pages/pages-build-deployment"
+    }
+  ]
+}

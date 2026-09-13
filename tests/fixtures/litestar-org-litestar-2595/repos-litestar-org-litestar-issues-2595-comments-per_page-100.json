@@ -1,0 +1,9 @@
+[
+  {
+    "user": {
+      "login": "Yash121l"
+    },
+    "author_association": "NONE",
+    "body": "Piccolo support moved out of this repo in 3.0 (#4364), so the fix belongs in litestar-piccolo. Opened litestar-org/litestar-piccolo#2: `_parse_piccolo_type` had no `ForeignKey` branch, so FK columns were typed as `int` and the nested DTO path never ran. Typing them as `Union[RelatedTable, key_type]` lets prefetched relations nest (the exact snippet from this issue now works, including self-referential FKs at depth 2) while unprefetched rows keep returning the bare id.\n\nOne thing I hit on the way that is a litestar bug rather than a piccolo one: nested `include`/`exclude` entries are dropped for union-typed nested fields, because the composite handlers in `dto/_backend.py` re-enter `_create_transfer_type` with a synthetic field name of `\"0\"` and wipe the already-filtered set. Reproducible with a plain `DataclassDTO` and `include={\"maybe.b\"}` where `maybe: Optional[Inner]`. Happy to file that separately with the repro if useful."
+  }
+]

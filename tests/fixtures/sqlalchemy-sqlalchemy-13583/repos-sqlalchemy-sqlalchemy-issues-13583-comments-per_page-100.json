@@ -1,0 +1,51 @@
+[
+  {
+    "user": {
+      "login": "sqla-tester"
+    },
+    "author_association": "COLLABORATOR",
+    "body": "**Mike Bayer** has proposed a fix for this issue in the **main** branch:\n\n**preserve selectable for aliased() of aliased CTE, subquery** https://gerrit.sqlalchemy.org/c/sqlalchemy/sqlalchemy/+/6964"
+  },
+  {
+    "user": {
+      "login": "sqla-tester"
+    },
+    "author_association": "COLLABORATOR",
+    "body": "**Mike Bayer** has proposed a fix for this issue in the **rel_2_0** branch:\n\n**preserve selectable for aliased() of aliased CTE, subquery** https://gerrit.sqlalchemy.org/c/sqlalchemy/sqlalchemy/+/6965"
+  },
+  {
+    "user": {
+      "login": "sqla-tester"
+    },
+    "author_association": "COLLABORATOR",
+    "body": "**Mike Bayer** referenced this issue:\n\n**alias of an aliased CTE refers to the original CTE** https://gerrit.sqlalchemy.org/c/sqlalchemy/sqlalchemy/+/6968"
+  },
+  {
+    "user": {
+      "login": "sqla-tester"
+    },
+    "author_association": "COLLABORATOR",
+    "body": "**Mike Bayer** referenced this issue:\n\n**don't embed anonymous names in flat named join alias** https://gerrit.sqlalchemy.org/c/sqlalchemy/sqlalchemy/+/6969"
+  },
+  {
+    "user": {
+      "login": "John-Sias"
+    },
+    "author_association": "NONE",
+    "body": "Thanks, @zzzeek - much appreciated, as always. My workaround, given that I have the filtered table aliased in my system, which works with both subquery and cte, is:\n\n```\ngpo_sel = Group.filter_open()._aliased_insp.selectable\ngp1 = aliased(Group, gpo_sel.alias(\"gp1\"))\ngp2 = aliased(Group, gpo_sel.alias(\"gp2\"))\n```\n\nNeedless to say, I'm glad you're fixing it!"
+  },
+  {
+    "user": {
+      "login": "sqla-tester"
+    },
+    "author_association": "COLLABORATOR",
+    "body": "**Mike Bayer** referenced this issue:\n\n**alias of an aliased CTE refers to the original CTE** https://gerrit.sqlalchemy.org/c/sqlalchemy/sqlalchemy/+/6970"
+  },
+  {
+    "user": {
+      "login": "sqla-tester"
+    },
+    "author_association": "COLLABORATOR",
+    "body": "**Mike Bayer** referenced this issue:\n\n**don't embed anonymous names in flat named join alias** https://gerrit.sqlalchemy.org/c/sqlalchemy/sqlalchemy/+/6971"
+  }
+]

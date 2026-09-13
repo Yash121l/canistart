@@ -1,0 +1,252 @@
+[
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 8675,
+        "html_url": "https://github.com/cline/cline/issues/8675",
+        "state": "closed",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": null
+      }
+    }
+  },
+  {
+    "event": "referenced",
+    "commit_id": "1168611b20781c131fe2aed28e9806de9f74ee42"
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 8996,
+        "html_url": "https://github.com/cline/cline/pull/8996",
+        "state": "closed",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 9179,
+        "html_url": "https://github.com/cline/cline/issues/9179",
+        "state": "closed",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": null
+      }
+    }
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 10377,
+        "html_url": "https://github.com/cline/cline/pull/10377",
+        "state": "open",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 10475,
+        "html_url": "https://github.com/cline/cline/pull/10475",
+        "state": "closed",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 11298,
+        "html_url": "https://github.com/cline/cline/pull/11298",
+        "state": "closed",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "referenced",
+    "commit_id": "ff4e07993429518218d3a9e428b0c49a52ca95fe"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "82c7d71765c1ceebe2875f42e71c925f0f393223"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "2c07228fbdec00793f880aa4c109b62d7a4a40bb"
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 12221,
+        "html_url": "https://github.com/cline/cline/pull/12221",
+        "state": "open",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "referenced",
+    "commit_id": "f0ac0fa9614e3a191354c43a0317fe90fd4899ad"
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 12682,
+        "html_url": "https://github.com/cline/cline/pull/12682",
+        "state": "open",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "referenced",
+    "commit_id": "c9f3f0830c811d2df7a89b86be9acc9ed49bf373"
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 12788,
+        "html_url": "https://github.com/cline/cline/pull/12788",
+        "state": "open",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 13940,
+        "html_url": "https://github.com/cline/cline/pull/13940",
+        "state": "closed",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 13947,
+        "html_url": "https://github.com/cline/cline/pull/13947",
+        "state": "open",
+        "repository": {
+          "full_name": "cline/cline"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "referenced",
+    "commit_id": "51d61a52eebee3bc6735a023e66e02b9e2e462a6"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "a321c43753802cc4b85c527c8a22173f66b111c3"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "9e9b834833cb52e87e1bea34961687d774020891"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "bf768e7da36d8ce9b2a21a6aa5488ebdfdca20c5"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "83613fa28f8f7c85427b13784de9645459ba5a8c"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "f589d30dee2e45a4e5e683e80effe0c3852004d4"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "749a12c0a5bbb9951cf7223363dcea164be92919"
+  },
+  {
+    "event": "referenced",
+    "commit_id": "b98a17ba78bfd59bd5d409323352d648c8c2e0a4"
+  }
+]

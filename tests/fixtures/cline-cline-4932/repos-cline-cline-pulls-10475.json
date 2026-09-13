@@ -1,0 +1,19 @@
+{
+  "number": 10475,
+  "title": "fix(webview): add ARIA attributes to plan/act mode toggle for screen readers",
+  "html_url": "https://github.com/cline/cline/pull/10475",
+  "state": "closed",
+  "locked": false,
+  "created_at": "2026-04-30T10:28:31Z",
+  "updated_at": "2026-07-31T01:04:04Z",
+  "closed_at": "2026-07-31T01:04:04Z",
+  "merged_at": null,
+  "draft": false,
+  "body": "## Summary\n- Add `aria-label` announcing current mode to screen readers\n- Add `role='switch'` and `aria-checked` for proper switch semantics\n- Add `tabIndex=0` to make toggle keyboard focusable\n- Add `onKeyDown` handler for Enter/Space activation\n- Add `aria-hidden` to child elements to prevent duplicate announcements\n\nAccessibility improvements for users who rely on screen readers to determine the current plan/act mode.\n\nFixes #4932",
+  "author_association": "NONE",
+  "user": {
+    "login": "himax12"
+  },
+  "assignees": [],
+  "labels": []
+}

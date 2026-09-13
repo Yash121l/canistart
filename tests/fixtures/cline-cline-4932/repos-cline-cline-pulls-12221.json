@@ -1,0 +1,19 @@
+{
+  "number": 12221,
+  "title": "fix(webview): expose Plan/Act toggle as an accessible radiogroup (#4932)",
+  "html_url": "https://github.com/cline/cline/pull/12221",
+  "state": "open",
+  "locked": false,
+  "created_at": "2026-07-10T12:51:51Z",
+  "updated_at": "2026-08-19T09:05:39Z",
+  "closed_at": null,
+  "merged_at": null,
+  "draft": false,
+  "body": "## What\r\n\r\nFixes #4932 - the Plan/Act mode toggle isn't exposed to assistive tech as a single mutually-exclusive control, so a screen-reader user can't tell which mode is active (risking unintended edits in Act mode when they believe they're in Plan).\r\n\r\n## Why (root cause)\r\n\r\nIn `ChatTextArea.tsx` the toggle rendered **two sibling `role=\"switch\"` divs** inside a `SwitchContainer` with no group role and no label. NVDA/VoiceOver announced \"Plan clickable\" / \"Act clickable\" - the mutual exclusivity and active state were never conveyed. PR #4263 added `role=\"switch\"` earlier but the semantic problem (two independent switches, no group) remained.\r\n\r\n## How\r\n\r\nApply the WAI-ARIA radiogroup pattern, minimal and presentational:\r\n- Container -> `role=\"radiogroup\"` + `aria-label=\"Plan/Act mode\"`, made a single keyboard tab stop (`tabIndex={0}`) and operable (`onKeyDown`: Enter/Space -> toggle, `preventDefault` to stop page scroll).\r\n- Each option -> `role=\"radio\"` (was `switch`), keeping `aria-checked`.\r\n- `TooltipTrigger asChild` so `SwitchContainer` *is* the trigger (no redundant button tab stop).\r\n- Added a `:focus-visible` outline so keyboard focus is clearly visible.\r\n\r\nNow announces as \"Plan/Act mode, Plan, radio button, selected\" / \"Act, radio button, not selected\".\r\n\r\n## Testing\r\n\r\n- `cd apps/vscode/webview-ui && npx tsc --noEmit` -> 0 errors\r\n- `npx vitest run` -> 283 passed (the one unrelated `@cline/llms` resolution failure is pre-existing on `main`, from the SDK package not being built locally - confirmed it fails identically without this change)\r\n- `biome check` on the changed file -> clean\r\n- Manual: verified the rendered accessibility tree exposes `radiogroup` + two `radio`s with correct `aria-checked`, a single tab stop lands on the group, and Enter/Space toggles the mode.\r\n\r\n## Impact / regression risk\r\n\r\nPresentational ARIA + keyboard handler only. Click, the `togglePlanActKeys` shortcut, the tooltip, and the visual Slider are all unchanged. No proto/state/dependency changes; one file, +20/-3.\r\n\r\n## Known scoped limitation (open to a follow-up)\r\n\r\nThis delivers correct **announcement + keyboard operability** (the reported bug). It does **not** add arrow-key selection of an individual radio - activation toggles the pair, matching the existing toggle behavior. I can  add full APG arrow-key navigation, or switch the container to a single `role=\"switch\"` if you'd prefer that semantic as a follow-up",
+  "author_association": "CONTRIBUTOR",
+  "user": {
+    "login": "minh2416294"
+  },
+  "assignees": [],
+  "labels": []
+}

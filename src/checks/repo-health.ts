@@ -1,4 +1,5 @@
 import type { ApiPull, ApiRepo, ApiSearchResult } from '../api-types.js';
+import { count } from '../text.js';
 import type { CheckContext, CheckResult, Evidence } from '../types.js';
 
 const OUTSIDE_MERGE_DAYS = 30;
@@ -52,17 +53,17 @@ export async function checkRepoHealth({ client, ref, now }: CheckContext): Promi
     : undefined;
 
   evidence.push({
-    text: `${merged.length} of the last ${closed.length} closed pull requests were merged`,
+    text: `${merged.length} of the last ${count(closed.length, 'closed pull request')} ${merged.length === 1 ? 'was' : 'were'} merged`,
     url: `${repo.html_url}/pulls?q=is%3Apr+is%3Aclosed`,
   });
   if (median !== undefined) evidence.push({ text: `median ${median}h from open to merge`, url: repo.html_url });
   evidence.push({
     text: lastOutside
-      ? `last outside contribution merged ${outsideDays} days ago (#${lastOutside.number} by @${lastOutside.user.login})`
+      ? `last outside contribution merged ${count(outsideDays ?? 0, 'day')} ago (#${lastOutside.number} by @${lastOutside.user.login})`
       : 'no outside contribution among the last 20 closed pull requests',
     url: lastOutside ? lastOutside.html_url : repo.html_url,
   });
-  evidence.push({ text: `${openCount} open pull requests`, url: `${repo.html_url}/pulls` });
+  evidence.push({ text: count(openCount, 'open pull request'), url: `${repo.html_url}/pulls` });
 
   const warnings: string[] = [];
   if (rate < MIN_MERGE_RATE) warnings.push(`only ${Math.round(rate * 100)}% of recent pull requests were merged`);
@@ -75,7 +76,7 @@ export async function checkRepoHealth({ client, ref, now }: CheckContext): Promi
   return {
     id: 'repo_health',
     status: 'pass',
-    summary: `Repo merges outside work: ${Math.round(rate * 100)}% merge rate, last outside merge ${outsideDays} days ago.`,
+    summary: `Repo merges outside work: ${Math.round(rate * 100)}% merge rate, last outside merge ${count(outsideDays ?? 0, 'day')} ago.`,
     evidence,
     blocks_agents: false,
   };

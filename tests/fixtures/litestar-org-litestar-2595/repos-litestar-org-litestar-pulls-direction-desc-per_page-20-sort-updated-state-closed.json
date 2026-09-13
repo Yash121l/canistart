@@ -1,0 +1,398 @@
+[
+  {
+    "number": 5071,
+    "title": "fix(channels): use aclose instead of deprecated reset in Redis pubsub shutdown",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5071",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-11T16:27:25Z",
+    "updated_at": "2026-09-11T19:13:17Z",
+    "closed_at": "2026-09-11T19:13:17Z",
+    "merged_at": "2026-09-11T19:13:17Z",
+    "draft": false,
+    "body": "Closes #5068\n\n### Description\n`RedisChannelsPubSubBackend.on_shutdown()` previously called `await self._pub_sub.reset()`. In `redis-py` 5.0.1+, `reset()` is deprecated in favor of `aclose()`, which causes a `DeprecationWarning` to be emitted on backend shutdown.\n\nThis change:\n1. Calls `aclose()` on `_pub_sub` when available, falling back to `reset()` for compatibility with older redis-py versions (`< 5.0.1`).\n2. Removes the `ignore:.*Call to deprecated reset:DeprecationWarning` suppression from `pyproject.toml`.\n3. Adds unit tests covering both the `aclose()` path and the `reset()` fallback.\n\n### Checklist\n- [x] The PR has a descriptive title\n- [x] Linting and formatting checks have passed\n- [x] Unit tests have been added and pass\n- [x] Closed issue referenced\n\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5071\">https://litestar-org.github.io/litestar-docs-preview/5071</a> \n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "itzzdev09"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5067,
+    "title": "docs: add recipes/FAQ section with stacktrace visibility recipe",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5067",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-09T13:59:46Z",
+    "updated_at": "2026-09-09T14:29:47Z",
+    "closed_at": "2026-09-09T14:29:47Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Closes #3450\n\n## What\n\nAdds a new \\docs/topics/recipes.rst\\ page establishing the Recipes/FAQ section requested in #3450. Includes the first recipe: how to view the full stack trace inside route handlers during development, covering \\debug=True\\, the \\--debug\\ CLI flag, \\LITESTAR_DEBUG\\, and\n\\pdb_on_exception\\.\n\n## Why\n\nThis is a frequently asked question in Discord (as noted in the issue). Having a dedicated recipes section gives maintainers a stable place to add more FAQ entries over time.\n\n## How tested\n\n- Verified RST syntax and cross-references are consistent with existing docs style\n- \\git diff\\ confirms only the two intended files are changed\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5067\">https://litestar-org.github.io/litestar-docs-preview/5067</a> \n",
+    "author_association": "NONE",
+    "user": {
+      "login": "sjh0315"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5065,
+    "title": "feat(redis): support NX and XX in RedisStore.set",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5065",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-09T04:25:24Z",
+    "updated_at": "2026-09-09T08:07:03Z",
+    "closed_at": "2026-09-09T08:07:03Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Description\r\n\r\nAdd `NX` and `XX` options to `RedisStore.set()` to support Redis atomic conditional writes.\r\n\r\n### Problem\r\n\r\nCurrently, `RedisStore.set()` does not expose Redis `NX`/`XX` options.\r\n\r\nThis makes implementing idempotency safely difficult. For example:\r\n\r\n```py\r\nif not await store.get(idempotency_key):\r\n    await store.set(idempotency_key, \"processing\") \r\n    await create_record()\r\n```\r\n\r\nTwo concurrent requests can both execute `GET`, receive `None`, and then both create records.\r\n\r\nRedis `SET NX` solves this atomically:\r\n\r\n```py\r\ncreated = await store.set(\r\n    idempotency_key,\r\n    \"processing\",\r\n    expires_in=3600,\r\n    nx=True,\r\n)\r\n\r\nif not created:\r\n    # Already exists / being processed\r\n    ...\r\n```\r\n\r\nOnly one concurrent request can successfully create the key.\r\n\r\n### Proposed Change\r\n\r\nExpose `nx` and `xx` in `RedisStore.set()`:\r\n\r\n```py \r\nawait store.set(\r\n    key,\r\n    value,\r\n    expires_in=3600,\r\n    nx=True,\r\n)\r\n```\r\n\r\nand:\r\n\r\n```py\r\nawait store.set(\r\n    key,\r\n    value,\r\n    xx=True,\r\n)\r\n```\r\n\r\nThe method should return whether the conditional `SET` succeeded, allowing callers to determine whether they acquired the key.\r\n\r\n`NX` and `XX` should be mutually exclusive.\r\n\r\n### Motivation\r\n\r\nThis enables common Redis patterns directly through `RedisStore`, including:\r\n\r\n- Idempotency keys\r\n- Distributed locks\r\n- Atomic \"create if not exists\"\r\n- Conditional cache updates\r\n\r\nIt also avoids requiring developers to bypass `RedisStore` and access the underlying Redis client directly.\r\n\r\n### Backward Compatibility\r\n\r\nExisting calls without `nx` or `xx` retain the current behavior.\r\n\r\n### Tests\r\n\r\nAdd tests covering:\r\n\r\n- `NX` with an existing/non-existing key\r\n- `XX` with an existing/non-existing key\r\n- `NX` + `XX` validation\r\n\r\n\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5065\">https://litestar-org.github.io/litestar-docs-preview/5065</a> \n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "Shekhrozx"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5064,
+    "title": "feat(redis): support NX and XX in RedisStore.set",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5064",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-09T02:54:57Z",
+    "updated_at": "2026-09-09T03:19:57Z",
+    "closed_at": "2026-09-09T03:19:57Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Description\r\n\r\nAdd `NX` and `XX` options to `RedisStore.set()` to support Redis atomic conditional writes.\r\n\r\n### Problem\r\n\r\nCurrently, `RedisStore.set()` does not expose Redis `NX`/`XX` options.\r\n\r\nThis makes implementing idempotency safely difficult. For example:\r\n\r\n```py\r\nif not await store.get(idempotency_key):\r\n    await store.set(idempotency_key, \"processing\") \r\n    await create_record()\r\n```\r\n\r\nTwo concurrent requests can both execute `GET`, receive `None`, and then both create records.\r\n\r\nRedis `SET NX` solves this atomically:\r\n\r\n```py\r\ncreated = await store.set(\r\n    idempotency_key,\r\n    \"processing\",\r\n    expires_in=3600,\r\n    nx=True,\r\n)\r\n\r\nif not created:\r\n    # Already exists / being processed\r\n    ...\r\n```\r\n\r\nOnly one concurrent request can successfully create the key.\r\n\r\n### Proposed Change\r\n\r\nExpose `nx` and `xx` in `RedisStore.set()`:\r\n\r\n```py \r\nawait store.set(\r\n    key,\r\n    value,\r\n    expires_in=3600,\r\n    nx=True,\r\n)\r\n```\r\n\r\nand:\r\n\r\n```py\r\nawait store.set(\r\n    key,\r\n    value,\r\n    xx=True,\r\n)\r\n```\r\n\r\nThe method should return whether the conditional `SET` succeeded, allowing callers to determine whether they acquired the key.\r\n\r\n`NX` and `XX` should be mutually exclusive.\r\n\r\n### Motivation\r\n\r\nThis enables common Redis patterns directly through `RedisStore`, including:\r\n\r\n- Idempotency keys\r\n- Distributed locks\r\n- Atomic \"create if not exists\"\r\n- Conditional cache updates\r\n\r\nIt also avoids requiring developers to bypass `RedisStore` and access the underlying Redis client directly.\r\n\r\n### Backward Compatibility\r\n\r\nExisting calls without `nx` or `xx` retain the current behavior.\r\n\r\n### Tests\r\n\r\nAdd tests covering:\r\n\r\n- `NX` with an existing/non-existing key\r\n- `XX` with an existing/non-existing key\r\n- `NX` + `XX` validation\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5064\">https://litestar-org.github.io/litestar-docs-preview/5064</a> \n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "Shekhrozx"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5056,
+    "title": "fix(security)!: omit invalid name field in HTTP Bearer OpenAPI security scheme (#5050)",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5056",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-07T18:03:36Z",
+    "updated_at": "2026-09-07T19:32:45Z",
+    "closed_at": "2026-09-07T19:31:36Z",
+    "merged_at": "2026-09-07T19:31:36Z",
+    "draft": false,
+    "body": "## Description\n\nFixes #5050\n\nIn `BaseJWTAuth.openapi_components`, the `SecurityScheme` object was instantiated with `name=self.auth_header`.\n\nPer the OpenAPI Specification (3.0 and 3.1, [Security Scheme Object](https://spec.openapis.org/oas/latest.html#security-scheme-object)), the `name` and `in` fields apply **only** to `type=\"apiKey\"`. For `type=\"http\"` (HTTP Authentication schemes like `scheme=\"Bearer\"`), `name` is invalid schema and must not be present.\n\nStrict OpenAPI 3.0/3.1 clients and validators (such as `aiopenapi3`) fail schema validation when `name` is emitted on an HTTP security scheme.\n\nThis PR removes `name=self.auth_header` from `SecurityScheme` in `BaseJWTAuth.openapi_components`.\n\n## Changes\n\n- In `litestar/security/jwt/auth.py`: removed `name=self.auth_header` from `SecurityScheme(type=\"http\", ...)`.\n- In `tests/unit/test_security/test_jwt/test_auth.py`: updated `test_jwt_auth_openapi` to assert that `security_scheme.name is None` and that the generated OpenAPI schema dictionary omits `\"name\": \"Authorization\"`.\n\n## Validation\n\n- Focused test: `python -m pytest tests/unit/test_security/test_jwt/test_auth.py -k \"test_jwt_auth_openapi\"` passed (1 passed)\n- Security package tests: `python -m pytest tests/unit/test_security/` passed (185 passed, 1 skipped)\n- Lint & Format: `ruff check` and `ruff format --check` passed with 0 errors\n- All runtime JWT authentication behavior and header handling remain unchanged.\n\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5056\">https://litestar-org.github.io/litestar-docs-preview/5056</a> \n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "katariyaVivek"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5055,
+    "title": "fix(middleware): strip port from Host header before allowed-hosts match",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5055",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-07T14:27:26Z",
+    "updated_at": "2026-09-07T14:49:53Z",
+    "closed_at": "2026-09-07T14:49:52Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "### Description\n\n`AllowedHostsMiddleware` matched the `Host` header **with the port still attached**, so a request carrying `Host: localhost:8000` did not match an allowed host of `localhost` and was rejected with `400 - invalid host header`.\n\nThe port-strip was lost in `c4189610`. The walrus binds `host` to the raw header, so `host.split(\":\")[0]` survives only as the truthiness guard on the left of the `and`, while `fullmatch()` still receives the port-bearing value:\n\n```python\n# current - `host` keeps the port, the strip only gates the `if`\nif (host := headers.get(\"host\")) is not None and host.split(\":\")[0]:\n    if self.allowed_hosts_regex.fullmatch(host):   # matches against \"localhost:8000\"\n```\n\nThis only shows up when the `Host` header carries a port, which is why it goes unnoticed behind a proxy that forwards a bare domain.\n\n### Fix\n\nBind the port-stripped value to `host` and keep the `None` guard on the raw header:\n\n```python\nif (raw_host := headers.get(\"host\")) is not None and (host := raw_host.split(\":\")[0]):\n```\n\nOne line, no behavioural change beyond restoring the port-strip.\n\n### Verification\n\nReproduced locally against the MCVE from the issue. Before the fix `Host: localhost:8000` returned `400`; after it returns `200`, while disallowed hosts stay rejected **with and without** a port, so the check is not weakened:\n\n```\nHost: localhost:8000  -> 200 ok\nHost: localhost       -> 200 ok\nHost: evil.com        -> 400 {\"message\":\"invalid host header\"}\nHost: evil.com:8000   -> 400 {\"message\":\"invalid host header\"}\n```\n\n### Tests\n\nExtended the existing `test_middleware_allowed_hosts` parametrisation with three cases: two allowed hosts carrying a port must pass, and a disallowed host carrying a port must still be rejected so the negative path is covered too.\n\nConfirmed these are genuine regression tests. With the fix reverted the two positive cases fail and pass again once it is restored:\n\n```\nFAILED test_middleware_allowed_hosts[http://x.example.com:8000-None-200]\nFAILED test_middleware_allowed_hosts[http://moishe.zuchmir.com:8000-None-200]\n2 failed, 14 passed\n```\n\n`tests/unit/test_middleware` is green at **779 passed**. Four failures in `test_compression_middleware` (zstd) and `test_logging_middleware` are pre-existing and reproduce identically on an unmodified checkout, unrelated to this change. `ruff check`, `ruff format --check`, and `mypy` all pass on the touched files.\n\nCloses #4869\n\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5055\">https://litestar-org.github.io/litestar-docs-preview/5055</a> \n",
+    "author_association": "NONE",
+    "user": {
+      "login": "CyberneticX-Tech"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 4570,
+    "title": "chore(deps): bump pyasn1 from 0.6.1 to 0.6.2",
+    "html_url": "https://github.com/litestar-org/litestar/pull/4570",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-02-02T09:08:38Z",
+    "updated_at": "2026-09-07T12:27:39Z",
+    "closed_at": "2026-09-07T12:27:28Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Bumps [pyasn1](https://github.com/pyasn1/pyasn1) from 0.6.1 to 0.6.2.\n<details>\n<summary>Release notes</summary>\n<p><em>Sourced from <a href=\"https://github.com/pyasn1/pyasn1/releases\">pyasn1's releases</a>.</em></p>\n<blockquote>\n<h2>Release 0.6.2</h2>\n<p>It's a minor release.</p>\n<ul>\n<li>Fixed continuation octet limits in OID/RELATIVE-OID decoder (CVE-2026-23490).</li>\n<li>Added support for Python 3.14.</li>\n<li>Added SECURITY.md policy.</li>\n<li>Migrated to pyproject.toml packaging.</li>\n</ul>\n<p>All changes are noted in the <a href=\"https://github.com/pyasn1/pyasn1/blob/master/CHANGES.rst\">CHANGELOG</a>.</p>\n</blockquote>\n</details>\n<details>\n<summary>Changelog</summary>\n<p><em>Sourced from <a href=\"https://github.com/pyasn1/pyasn1/blob/main/CHANGES.rst\">pyasn1's changelog</a>.</em></p>\n<blockquote>\n<h2>Revision 0.6.2, released 16-01-2026</h2>\n<ul>\n<li>CVE-2026-23490 (GHSA-63vm-454h-vhhq): Fixed continuation octet limits\nin OID/RELATIVE-OID decoder (thanks to tsigouris007)</li>\n<li>Added support for Python 3.14\n[pr <a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/97\">#97</a>](<a href=\"https://redirect.github.com/pyasn1/pyasn1/pull/97\">pyasn1/pyasn1#97</a>)</li>\n<li>Added SECURITY.md policy</li>\n<li>Fixed unit tests failing due to missing code\n[issue <a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/91\">#91</a>](<a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/91\">pyasn1/pyasn1#91</a>)\n[pr <a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/92\">#92</a>](<a href=\"https://redirect.github.com/pyasn1/pyasn1/pull/92\">pyasn1/pyasn1#92</a>)</li>\n<li>Migrated to pyproject.toml packaging\n[pr <a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/90\">#90</a>](<a href=\"https://redirect.github.com/pyasn1/pyasn1/pull/90\">pyasn1/pyasn1#90</a>)</li>\n</ul>\n</blockquote>\n</details>\n<details>\n<summary>Commits</summary>\n<ul>\n<li><a href=\"https://github.com/pyasn1/pyasn1/commit/e7356f89cf32c130d65b1a0e903fe7ecce426424\"><code>e7356f8</code></a> Prepare release 0.6.2</li>\n<li><a href=\"https://github.com/pyasn1/pyasn1/commit/3908f144229eed4df24bd569d16e5991ace44970\"><code>3908f14</code></a> Merge commit from fork</li>\n<li><a href=\"https://github.com/pyasn1/pyasn1/commit/0a7e067674b1ec558f9d233a3bc173472fe27c6c\"><code>0a7e067</code></a> Add support for Python 3.14 (<a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/97\">#97</a>)</li>\n<li><a href=\"https://github.com/pyasn1/pyasn1/commit/33656e986d8e2355123799e7267104ac7d8a6fb1\"><code>33656e9</code></a> Create Security Policy</li>\n<li><a href=\"https://github.com/pyasn1/pyasn1/commit/fa62307253f4423effac71a618e20fabaa37e22e\"><code>fa62307</code></a> fix for issue <a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/91\">#91</a>: unit tests failing due to missing code (<a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/92\">#92</a>)</li>\n<li><a href=\"https://github.com/pyasn1/pyasn1/commit/f1ed02e41c193a66741572185bab94d34f43daec\"><code>f1ed02e</code></a> Package pyasn1 with pyproject.toml (<a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/90\">#90</a>)</li>\n<li><a href=\"https://github.com/pyasn1/pyasn1/commit/93c4d4f0b6af84c13517b5700104ac57fb6d3fe5\"><code>93c4d4f</code></a> Switch documentation user to pyasn1 (<a href=\"https://redirect.github.com/pyasn1/pyasn1/issues/89\">#89</a>)</li>\n<li>See full diff in <a href=\"https://github.com/pyasn1/pyasn1/compare/v0.6.1...v0.6.2\">compare view</a></li>\n</ul>\n</details>\n<br />\n\n\n[![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=pyasn1&package-manager=uv&previous-version=0.6.1&new-version=0.6.2)](https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores)\n\nYou can trigger a rebase of this PR by commenting `@dependabot rebase`.\n\n[//]: # (dependabot-automerge-start)\n[//]: # (dependabot-automerge-end)\n\n---\n\n<details>\n<summary>Dependabot commands and options</summary>\n<br />\n\nYou can trigger Dependabot actions by commenting on this PR:\n- `@dependabot rebase` will rebase this PR\n- `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n- `@dependabot merge` will merge this PR after your CI passes on it\n- `@dependabot squash and merge` will squash and merge this PR after your CI passes on it\n- `@dependabot cancel merge` will cancel a previously requested merge and block automerging\n- `@dependabot reopen` will reopen this PR if it is closed\n- `@dependabot close` will close this PR and stop Dependabot recreating it. You can achieve the same result by closing it manually\n- `@dependabot show <dependency name> ignore conditions` will show all of the ignore conditions of the specified dependency\n- `@dependabot ignore this major version` will close this PR and stop Dependabot creating any more for this major version (unless you reopen the PR or upgrade to it yourself)\n- `@dependabot ignore this minor version` will close this PR and stop Dependabot creating any more for this minor version (unless you reopen the PR or upgrade to it yourself)\n- `@dependabot ignore this dependency` will close this PR and stop Dependabot creating any more for this dependency (unless you reopen the PR or upgrade to it yourself)\nYou can disable automated security fix PRs for this repo from the [Security Alerts page](https://github.com/litestar-org/litestar/network/alerts).\n\n</details>\n\n> **Note**\n> Automatic rebases have been disabled on this pull request as it has been open for over 30 days.\n\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: https://litestar-org.github.io/litestar-docs-preview/4570\n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "dependabot[bot]"
+    },
+    "assignees": [],
+    "labels": [
+      {
+        "name": "Dependencies"
+      },
+      {
+        "name": "pr/internal"
+      },
+      {
+        "name": "size: small"
+      },
+      {
+        "name": "area/dependencies"
+      },
+      {
+        "name": "python:uv"
+      }
+    ]
+  },
+  {
+    "number": 5030,
+    "title": "docs(cli): fix autodiscovery paths in CLI help text",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5030",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-31T22:33:02Z",
+    "updated_at": "2026-09-07T09:45:20Z",
+    "closed_at": "2026-09-07T09:45:20Z",
+    "merged_at": "2026-09-07T09:45:20Z",
+    "draft": false,
+    "body": "## Description\n\nFix inaccurate autodiscovery paths listed in the `litestar` CLI help text.\n\n### Changes\n\n- Remove `asgi.py` which was never in `AUTODISCOVERY_FILE_NAMES`\n- Add `application/` directory path (was missing)\n- Add note about submodule scanning within `app/` and `application/`\n- Fix `\"to will be\"` typo\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5030\">https://litestar-org.github.io/litestar-docs-preview/5030</a> \n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "HorusTheSonOfOsiris"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5048,
+    "title": "fix: forward `name` argument in `LitestarGroup.add_command()`",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5048",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-06T17:41:47Z",
+    "updated_at": "2026-09-06T17:55:33Z",
+    "closed_at": "2026-09-06T17:55:33Z",
+    "merged_at": "2026-09-06T17:55:33Z",
+    "draft": false,
+    "body": "## Description\r\n\r\nFixes #5047 \r\n\r\n`add_command()` was ignoring the `name` arg and always falling back to `cmd.name`. This just forwards it properly to Click's `super().add_command()`.\r\n\r\nAlso fixes the same thing for `LitestarExtensionGroup`, since it uses `name` when loading plugins from entry points.\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5048\">https://litestar-org.github.io/litestar-docs-preview/5048</a> \n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "aviralsaxena16"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5038,
+    "title": "perf: use frozenset field lookups in logging data extraction",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5038",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-04T17:50:11Z",
+    "updated_at": "2026-09-06T08:58:39Z",
+    "closed_at": "2026-09-06T08:58:18Z",
+    "merged_at": "2026-09-06T08:58:18Z",
+    "draft": false,
+    "body": "LoggingMiddleware precomputes ``request_log_fields`` as a frozenset at ``__init__`` and passes it per request instead of scanning a ``tuple``.\r\n\r\nSmall performance gain and no API change\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5038\">https://litestar-org.github.io/litestar-docs-preview/5038</a> \n",
+    "author_association": "MEMBER",
+    "user": {
+      "login": "Kumzy"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5037,
+    "title": "feat(jwt): add support for leeway param in jwt security backends",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5037",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-02T23:25:02Z",
+    "updated_at": "2026-09-05T21:00:50Z",
+    "closed_at": "2026-09-05T21:00:41Z",
+    "merged_at": "2026-09-05T21:00:41Z",
+    "draft": false,
+    "body": "## Description\r\n\r\nAdd `leeway` parameter support to set allowed clock error margin in second for token validation.\r\nI mirrored `jwt.decode` logic so `leeway` parameter also respected by `iat` checks, not only `exp`.\r\n\r\n### Why changes are breaking\r\n\r\nBecause of I added `leeway` parameter in `decode` and `decode_payload` methods' signatures, users who redefined either method in their code should add this parameter in signature, otherwise they will get TypeError. \r\n\r\nCloses #4584 \n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5037\">https://litestar-org.github.io/litestar-docs-preview/5037</a> \n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "happykust"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5043,
+    "title": "chore(deps): bump rich-click up to 1.9.9",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5043",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-05T20:04:58Z",
+    "updated_at": "2026-09-05T20:37:15Z",
+    "closed_at": "2026-09-05T20:37:00Z",
+    "merged_at": "2026-09-05T20:37:00Z",
+    "draft": false,
+    "body": "## Description\r\n\r\nJust bump rich-click to 1.9.9 version\r\n\r\nCloses #5020 and unlocks CI in some PR's\r\n\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5043\">https://litestar-org.github.io/litestar-docs-preview/5043</a> \n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "happykust"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5041,
+    "title": "chore(deps): bump rich-click to 1.9.9",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5041",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-05T19:39:56Z",
+    "updated_at": "2026-09-05T20:04:26Z",
+    "closed_at": "2026-09-05T20:03:13Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Description\r\n\r\nJust bump rich-click to 1.9.9 version\r\n\r\nCloses #5020 and unlocks CI in some PR's\n\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5041\">https://litestar-org.github.io/litestar-docs-preview/5041</a> \n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "happykust"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5042,
+    "title": "fix(openapi): document model-typed reserved kwargs",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5042",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-05T19:43:01Z",
+    "updated_at": "2026-09-05T19:54:30Z",
+    "closed_at": "2026-09-05T19:54:29Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Summary\r\n\r\n- document properties of model-typed `query`, `headers`, and `cookies` kwargs as individual OpenAPI parameters\r\n- unwrap referenced and annotated model schemas while rejecting ambiguous model/scalar and model/model unions\r\n- preserve `include_in_schema=False` for reserved parameters and model properties\r\n- retain schema-registry property metadata so visibility filtering does not alter shared component schemas\r\n\r\nFixes #2015\r\n\r\n## Verification\r\n\r\n- `201 passed, 1 xfailed` across the changed OpenAPI and related schema/plugin tests\r\n- Ruff check and format check passed\r\n- `pip check` passed\r\n- `git diff --check` passed\r\n- broader repository run completed with Docker-excluded infrastructure; remaining failures/errors were environment-only (Docker/Redis/Valkey startup, Windows symlink/subprocess constraints, and warnings-as-errors for deprecated `datetime.utcnow()`)",
+    "author_association": "NONE",
+    "user": {
+      "login": "icecold009"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5036,
+    "title": "fix(openapi): document model-typed reserved kwargs",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5036",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-02T19:05:43Z",
+    "updated_at": "2026-09-02T20:20:46Z",
+    "closed_at": "2026-09-02T20:20:45Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Summary\r\n\r\n- Document model-typed `query`, `headers`, and `cookies` kwargs as individual OpenAPI parameters.\r\n- Support optional and `Annotated[...]` model wrappers while preserving nested schema references.\r\n- Add regression coverage for issue #2015.\r\n\r\n## Validation\r\n\r\n- `pytest tests/unit/test_openapi`: 288 passed, 1 xfailed\r\n- `pytest tests/unit/test_kwargs`: 253 passed, 1 xfailed\r\n- Targeted mypy: passed\r\n- Ruff check and format: passed\r\n- `git diff --check`: passed\r\n- Pre-commit selected hooks passed except `unasyncd`, which crashes in its isolated hook environment with `TypeError: File.__init__() got an unexpected keyword argument 'limiter'` before checking files.\r\n\r\nFixes #2015",
+    "author_association": "NONE",
+    "user": {
+      "login": "icecold009"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5034,
+    "title": "perf(di): build canonical dependency graph",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5034",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-02T10:48:24Z",
+    "updated_at": "2026-09-02T11:11:52Z",
+    "closed_at": "2026-09-02T11:11:51Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "<html><head></head><body><h2>Description</h2><p>The previous dependency-graph construction recursively expanded every dependency path into a separate tree. When multiple dependencies referenced the same sub-dependency, the corresponding <code inline=\"\">DependencyContainer</code> and signature metadata were recreated for every reachable path.</p><p>For dense or highly convergent dependency DAGs, this caused the amount of bootstrap work to grow exponentially with the number of dependencies.</p><p>This PR:</p><ul><li><p>Builds a canonical graph containing exactly one <code inline=\"\">DependencyContainer</code> per reachable dependency key.</p></li><li><p>Uses iterative traversal to avoid consuming the Python call stack for deeply nested dependency chains.</p></li><li><p>Extracts and validates signature metadata once per dependency, then merges it into the handler's <code inline=\"\">KwargsModel</code>.</p></li><li><p>Preserves shared nodes across multiple dependency branches.</p></li><li><p>Detects dependency cycles and raises an <code inline=\"\">ImproperlyConfiguredException</code> containing the cycle path.</p></li><li><p>Adds tests covering shared-node reuse, single-pass metadata creation, and cycle detection.</p></li></ul><p>For example, a dense graph with 16 dependencies previously expanded into 32,768 duplicated nodes. The canonical graph contains only 16 nodes.</p><h3>Benchmarks</h3><p>Benchmark environment:</p><ul><li><p>Python 3.13.7</p></li><li><p><code inline=\"\">Litestar(..., openapi_config=None)</code></p></li><li><p>Dense dependency DAG:</p><ul><li><p><code inline=\"\">d0</code> has no dependencies.</p></li><li><p>Each <code inline=\"\">dN</code> depends on every preceding dependency.</p></li><li><p>The route handler requests only the final dependency.</p></li></ul></li><li><p>Results are median application initialization times.</p></li><li><p>Before: 3 repetitions.</p></li><li><p>After: 5 repetitions.</p></li></ul>\r\nDependencies | Before | After | Speedup\r\n-- | -- | -- | --\r\n12 | 64.731 ms | 10.068 ms | 6.43×\r\n14 | 329.805 ms | 10.883 ms | 30.30×\r\n16 | 1,255.295 ms | 12.982 ms | 96.69×\r\n\r\n<p>These are local synthetic microbenchmarks of application startup and do not measure request throughput.</p><h3>Testing</h3><p>Added tests verifying that:</p><ul><li><p>Shared dependencies reuse the same canonical graph node.</p></li><li><p>Signature metadata is created exactly once per reachable dependency.</p></li><li><p>Dependency cycles produce a configuration error containing the detected cycle path.</p></li></ul><p>The targeted dependency-batch test module passes successfully:</p><pre><code class=\"language-text\">12 passed\r\n</code></pre></body></html>",
+    "author_association": "NONE",
+    "user": {
+      "login": "stupidprogrammer4"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5032,
+    "title": "fix(dto): 500 error when Optional field has msgspec.Meta constraint",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5032",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-01T13:45:00Z",
+    "updated_at": "2026-09-01T18:51:37Z",
+    "closed_at": "2026-09-01T18:07:06Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Description\r\n\r\nPreviously, attempting to use the Optional data type in a `msgspec.Struct` with a msgspec constraint resulted in a `TypeError`. This occurred because the `msgspec.Meta` annotation was applied to the entire union, not the original data type. `msgspec` does not allow such an annotation.\r\n\r\nNow, only the non-None data type is annotated in the structure field, and msgspec correctly handles constraints.\r\nAnd None is still accepted.\r\n\r\nThis also affected partial DTOs with an `Optional` field, which previously also returned a 500, now - 400.\r\n\r\nCloses #5025 ",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "happykust"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5028,
+    "title": "fix(dto): push Meta constraints into Optional's non-None arm",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5028",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-31T16:20:47Z",
+    "updated_at": "2026-08-31T16:40:50Z",
+    "closed_at": "2026-08-31T16:40:49Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "### Summary\n\nBuilding the msgspec transfer model for a struct field like\n`Optional[Annotated[str, msgspec.Meta(min_length=1)]]` produced\n`Annotated[Optional[str], Meta(min_length=1)]` — with the constraint on the outer\n`Union` rather than the `str` arm. `msgspec` rejects that shape\n(`min_length`/`max_length`/`pattern`/`gt`/`ge`/`lt`/`le`/`multiple_of` may only\nsit on the base type they constrain), so decoding raised\n\n```\nTypeError: Can only set `min_length` on a str, bytes, or collection type - type\n`typing.Annotated[typing.Optional[str], msgspec.Meta(min_length=1, examples=[])]` is invalid\n```\n\nat request time in `_backend.py::parse_raw` / `parse_builtins`, and the handler\nreturned HTTP 500.\n\n### Root cause\n\n`kwarg_definition_from_field` (extended in #4815 to recognise\n`Optional[Annotated[T, Meta(...)]]`) correctly lifts the inner `Meta` into a\n`ParameterKwarg`. But when `_create_struct_for_field_definitions` rebuilds the\ntransfer struct, it does:\n\n```python\nif field_definition.passthrough_constraints:\n    if (field_meta := _create_struct_field_meta_for_field_definition(field_definition)) is not None:\n        field_type = Annotated[field_type, field_meta]\n```\n\n`field_type` here is `Union[str, None]` (from\n`_create_transfer_model_type_annotation`) — so the `Meta` lands on the outer\n`Union`, not on the `str` arm the user originally annotated.\n\n### Fix\n\nWhen the transfer `field_type` is `Union[X, None]` with a single non-`None`\narm, wrap `X` with the `Meta` instead and rebuild the union, mirroring\n`Optional[Annotated[X, ...]]` which `msgspec` accepts. Other shapes are\nwrapped directly, as before. The same helper is used for the\nnon-`passthrough_constraints` branch so a `ParameterKwarg` foreign annotation\nlands in the same place — no behaviour change for msgspec there, but keeps the\ntwo branches consistent.\n\n### Testing\n\n- Added `test_msgspec_dto_optional_annotated_meta_constraint` parametrised\n  over the seven `msgspec.Meta` constraints that trip the outer-union check\n  (`min_length`, `max_length`, `pattern`, `gt`, `ge`, `lt`, `le`), each\n  asserting that\n  - `None` decodes cleanly (Optional stays honoured), and\n  - a value violating the constraint raises `msgspec.ValidationError`\n    (pinning that the constraint is enforced on the inner arm, not silently\n    dropped).\n- Full `tests/unit/test_dto` + `tests/unit/test_openapi` — 552 passed, 1 skipped, 1 xfailed.\n- The pre-existing pyright ignore on the `struct_fields.append(...)` tuple\n  became unnecessary once the wrapping goes through a helper returning `Any`,\n  so it is removed. `uv run pyright litestar/dto/_backend.py` and\n  `uv run mypy litestar/dto/_backend.py` are both clean.\n\n### Reproducer\n\nBefore this change:\n\n```python\nfrom typing import Annotated, Optional\nfrom msgspec import Struct, Meta\nfrom litestar import Litestar, post\nfrom litestar.dto import MsgspecDTO\nfrom litestar.testing import TestClient\n\n\nclass Body(Struct):\n    text: Optional[Annotated[str, Meta(min_length=1)]] = None\n\n\n@post(\"/\", dto=MsgspecDTO[Body])\nasync def handler(data: Body) -> None: ...\n\n\nwith TestClient(Litestar(route_handlers=[handler])) as c:\n    print(c.post(\"/\", json={\"text\": \"any\"}).status_code)  # 500 before, 201 after\n    print(c.post(\"/\", json={\"text\": \"\"}).status_code)     # 400 (constraint enforced)\n    print(c.post(\"/\", json={\"text\": None}).status_code)   # 201 (Optional honoured)\n```\n\nFixes #5025",
+    "author_association": "NONE",
+    "user": {
+      "login": "mokashang"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 4987,
+    "title": "fix(channels): psycopg listener lifecycle + graceful stop (backport `v2`)",
+    "html_url": "https://github.com/litestar-org/litestar/pull/4987",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-13T12:45:25Z",
+    "updated_at": "2026-08-31T09:29:13Z",
+    "closed_at": "2026-08-31T09:29:12Z",
+    "merged_at": "2026-08-31T09:29:12Z",
+    "draft": false,
+    "body": "Backports #4967 and #4978. The second builds on the listener-task lifecycle the first introduces, so they come as a pair.\r\n\r\nThe CI test were not passing already on the `v2` branch so not sure what to do",
+    "author_association": "MEMBER",
+    "user": {
+      "login": "Kumzy"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 5002,
+    "title": "fix(tests): restore optional gender and lucky_number openapi params (`v2` CI)",
+    "html_url": "https://github.com/litestar-org/litestar/pull/5002",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-17T13:26:20Z",
+    "updated_at": "2026-08-31T09:25:02Z",
+    "closed_at": "2026-08-31T09:25:00Z",
+    "merged_at": "2026-08-31T09:25:00Z",
+    "draft": false,
+    "body": "Stacked on #4987. Fixes the two failures keeping `v2` CI red.\r\n\r\nThe typescript converter test: the #4750 cherry-pick dropped `required=False` from the `gender` and `lucky_number` query params in the openapi test conftest, and adjusted the assertions to match instead of restoring them.\r\n\r\nThe psycopg channels tests on 3.8/3.9: the backend creates its `asyncio.Lock` in `__init__`, and on ≤3.9 a lock binds to the loop active at creation (lazy binding only came in 3.10). The tests create the backend on one loop and run the app on the `TestClient` portal loop, so a contended acquire during shutdown blows up with \"got Future attached to a different loop\". Now recreated in `on_startup` on the running loop, like the event queue already is.\r\n\r\n<!-- docs-preview -->\n\n<hr>\n📚 Documentation preview 📚: <a href=\"https://litestar-org.github.io/litestar-docs-preview/5002\">https://litestar-org.github.io/litestar-docs-preview/5002</a> \n",
+    "author_association": "MEMBER",
+    "user": {
+      "login": "Kumzy"
+    },
+    "assignees": [],
+    "labels": []
+  }
+]

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fixtureKey, NotFoundError, type GitHubClient, type Query } from '../src/github.js';
+import { fixtureKey, NotFoundError, type GitHubClient, type Query } from './github.js';
 
 export class FixtureGitHubClient implements GitHubClient {
   constructor(private readonly dir: string) {}

@@ -1,0 +1,19 @@
+{
+  "number": 12788,
+  "title": "a11y: use radio-group ARIA for Plan/Act mode toggle",
+  "html_url": "https://github.com/cline/cline/pull/12788",
+  "state": "open",
+  "locked": false,
+  "created_at": "2026-07-31T16:30:35Z",
+  "updated_at": "2026-07-31T16:30:42Z",
+  "closed_at": null,
+  "merged_at": null,
+  "draft": false,
+  "body": "## Description\n\nScreen reader users previously could not determine which mode (Plan/Act) was active — the toggle used `role=\"switch\"` on two independent divs without proper grouping or focus management.\n\n## Changes\n- SwitchContainer role: `radiogroup` with `aria-label`\n- Individual labels role: `radio` with proper `aria-checked`\n- ArrowLeft/ArrowRight keyboard navigation between options\n- `tabIndex` management (only active option focusable)\n- `aria-label` on each radio for screen reader context\n\nCloses #4932",
+  "author_association": "NONE",
+  "user": {
+    "login": "muhfauziazhar"
+  },
+  "assignees": [],
+  "labels": []
+}

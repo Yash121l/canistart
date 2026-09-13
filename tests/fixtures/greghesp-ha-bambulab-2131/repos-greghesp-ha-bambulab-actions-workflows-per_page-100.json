@@ -1,0 +1,54 @@
+{
+  "workflows": [
+    {
+      "name": "Validate with hassfest",
+      "path": ".github/workflows/hassfest.yml",
+      "html_url": "https://github.com/greghesp/ha-bambulab/blob/main/.github/workflows/hassfest.yml"
+    },
+    {
+      "name": "Label issue by device",
+      "path": ".github/workflows/label-device.yml",
+      "html_url": "https://github.com/greghesp/ha-bambulab/blob/main/.github/workflows/label-device.yml"
+    },
+    {
+      "name": "Publish",
+      "path": ".github/workflows/publish.yml",
+      "html_url": "https://github.com/greghesp/ha-bambulab/blob/main/.github/workflows/publish.yml"
+    },
+    {
+      "name": "Mark stale issues and pull requests",
+      "path": ".github/workflows/stale.yml",
+      "html_url": "https://github.com/greghesp/ha-bambulab/blob/main/.github/workflows/stale.yml"
+    },
+    {
+      "name": "Tests",
+      "path": ".github/workflows/tests.yml",
+      "html_url": "https://github.com/greghesp/ha-bambulab/blob/main/.github/workflows/tests.yml"
+    },
+    {
+      "name": "Translation parity",
+      "path": ".github/workflows/translation-parity.yml",
+      "html_url": "https://github.com/greghesp/ha-bambulab/blob/main/.github/workflows/translation-parity.yml"
+    },
+    {
+      "name": "Validate",
+      "path": ".github/workflows/validate.yml",
+      "html_url": "https://github.com/greghesp/ha-bambulab/blob/main/.github/workflows/validate.yml"
+    },
+    {
+      "name": "Copilot code review",
+      "path": "dynamic/copilot-pull-request-reviewer/copilot-pull-request-reviewer",
+      "html_url": "https://github.com/greghesp/ha-bambulab/actions/workflows/copilot-pull-request-reviewer/copilot-pull-request-reviewer"
+    },
+    {
+      "name": "Dependabot Updates",
+      "path": "dynamic/dependabot/dependabot-updates",
+      "html_url": "https://github.com/greghesp/ha-bambulab/actions/workflows/dependabot/dependabot-updates"
+    },
+    {
+      "name": "Dependency Graph",
+      "path": "dynamic/dependabot/update-graph",
+      "html_url": "https://github.com/greghesp/ha-bambulab/actions/workflows/dependabot/update-graph"
+    }
+  ]
+}

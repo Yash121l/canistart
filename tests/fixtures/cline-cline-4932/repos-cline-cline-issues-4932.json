@@ -1,0 +1,28 @@
+{
+  "number": 4932,
+  "title": "[Accessibility] Screen reader users can't determine if they are in plan or act mode",
+  "html_url": "https://github.com/cline/cline/issues/4932",
+  "state": "open",
+  "state_reason": null,
+  "locked": false,
+  "created_at": "2025-07-15T16:49:10Z",
+  "updated_at": "2026-09-08T03:20:28Z",
+  "closed_at": null,
+  "body": "### What happened?\n\nPlan and act mode buttons do not have the correct role and state surfaced to assistive technology. I assume they should be radio buttons since they seem to behave as such. The impact as that a screen reader user cannot determine which mode they are in, and may inadvertently edit files if they think they are in plan mode but are actually in act.\n\nThis could be fixed either by using native radio button HTML controls or by using [ARIA](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/radio_role). If using ARIA, the relevant Javascript must be implemented as described in the documentation.\n\n### Steps to reproduce\n\n1. Enable a screen reader (i.e. VoiceOver built-in screen reader on Mac or NVDA on Windows)\n2. Navigate to the Cline window\n3. Move focus to the Plan/act button.\n\nExpected: If radio button role/state are used, screen reader would announce something like \"Plan, radio button, checked\" or \"Act, radio button, not checked\".\nActual: Screen reader announces: \"Plan clickable\", and \"Act clickable\"\n\n### Relevant API REQUEST output\n\n```shell\n\n```\n\n### Provider/Model\n\nAffects all models\n\n### Operating System\n\nWindows 11\n\n### System Info\n\nAffects all systems\n\n### Cline Version\n\n3.17.11\n\n### Additional context\n\n_No response_",
+  "author_association": "NONE",
+  "user": {
+    "login": "mforzano"
+  },
+  "assignees": [],
+  "labels": [
+    {
+      "name": "Help Wanted"
+    },
+    {
+      "name": "Good First Issue"
+    },
+    {
+      "name": "Bot Responded"
+    }
+  ]
+}

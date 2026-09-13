@@ -1,0 +1,19 @@
+{
+  "number": 12682,
+  "title": "fix(webview): use radiogroup/radio ARIA roles for Plan/Act mode toggle",
+  "html_url": "https://github.com/cline/cline/pull/12682",
+  "state": "open",
+  "locked": false,
+  "created_at": "2026-07-29T09:50:41Z",
+  "updated_at": "2026-08-27T10:02:54Z",
+  "closed_at": null,
+  "merged_at": null,
+  "draft": false,
+  "body": "## What\nFixes #4932. The Plan/Act mode toggle in `ChatTextArea.tsx` was two independent elements each with `role=\"switch\"` and `aria-checked`, so screen readers announced two separate on/off switches instead of one mutually-exclusive selection between Plan and Act. Since Act mode lets the agent edit files directly, not being able to reliably tell which mode is active is a real problem for screen reader users.\n\n## Change\n- `SwitchContainer` (the outer clickable container): `role=\"radiogroup\"`, `aria-label=\"Mode\"`.\n- Each Plan/Act `<div>`: `role=\"switch\"` → `role=\"radio\"`, keeping the existing `aria-checked={mode === m.toLowerCase()}`.\n- The existing `onClick={onModeToggle}` on the container is unchanged and still works correctly — `onModeToggle` already just flips between plan/act based on current state regardless of which side was clicked, so no logic change was needed there.\n- Added `tabIndex={0}` + an `onKeyDown` handler (Enter/Space → `onModeToggle()`) so the toggle is actually reachable and operable by keyboard — it wasn't focusable at all before this change.\n- Added `onFocus`/`onBlur` mirroring the existing `onMouseOver`/`onMouseLeave` tooltip handlers, so a keyboard user tabbing to the control gets the same tooltip a mouse-hover user does. Caught this via the repo's own `biome check`: once the element became focusable, `lint/a11y/useKeyWithMouseEvents` correctly flagged the mouse-only tooltip trigger as an accessibility gap.\n\nNot changed: `biome check` also suggests these could become native `<input type=\"radio\">` elements (`lint/a11y/useSemanticElements`). That would need a larger restructure of this custom-styled slider toggle (checked-state handling, name grouping, different event model) — kept the `role=\"radio\"` `<div>` approach the linked issue itself describes as the fix, to keep this PR small and focused.\n\n## Testing\nNo proto/backend changes — `onModeToggle`/`togglePlanActModeProto` are untouched, only the DOM/ARIA layer changed. Verified:\n- `npx @biomejs/biome check` on the file — clean except the one `useSemanticElements` info noted above (info-level, not an error).\n- `npx @biomejs/biome format` — no formatting changes needed.\n- Grepped the rest of the webview-ui source for `mode-switch` / `role=\"switch\"` / `SwitchContainer` — nothing else references the old markup, so no other tests or code needed updating.\n- Manual accessibility check with an actual screen reader wasn't possible in my environment (no VS Code / screen reader available) — the ARIA semantics themselves (`radiogroup`/`radio`/`aria-checked`/`aria-label`) follow the standard WAI-ARIA radio-group pattern, but a real screen-reader pass would be a good final check before merge.",
+  "author_association": "NONE",
+  "user": {
+    "login": "yottanami"
+  },
+  "assignees": [],
+  "labels": []
+}

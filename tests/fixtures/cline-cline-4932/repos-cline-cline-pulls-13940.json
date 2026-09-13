@@ -1,0 +1,19 @@
+{
+  "number": 13940,
+  "title": "fix(webview): expose Plan/Act toggle as an accessible radiogroup (#4932)",
+  "html_url": "https://github.com/cline/cline/pull/13940",
+  "state": "closed",
+  "locked": false,
+  "created_at": "2026-09-08T03:08:50Z",
+  "updated_at": "2026-09-08T09:18:23Z",
+  "closed_at": "2026-09-08T09:18:23Z",
+  "merged_at": null,
+  "draft": true,
+  "body": "## What Problem This Solves\n\nThe Plan/Act mode toggle in the chat input was rendered as two sibling `<div>` elements, each with `role=\"switch\"` and `aria-checked`. Screen readers therefore announced them as two independent switches rather than a single mutually-exclusive choice, and there was no way to tell from the announcement which mode was active or that the two options were mutually exclusive. See [cline/cline#4932](https://github.com/cline/cline/issues/4932).\n\n## Why This Change Was Made\n\nRestructure the toggle to follow the WAI-ARIA `radiogroup` pattern, which is the correct semantic for a binary mutually-exclusive choice:\n\n- `role=\"radiogroup\"` on the container with an `aria-label` so the group has an accessible name (\"Mode selection\").\n- `role=\"radio\"` on each option, with `aria-checked` and a per-option `aria-label` (\"Plan mode\" / \"Act mode\").\n- Roving `tabIndex`: the group is one tab stop and only the currently active option is focusable.\n- `Enter` / `Space` toggles the mode (preserving the existing click behavior).\n- `ArrowLeft` / `ArrowRight` move the selection to the sibling option.\n\nThe change is scoped to the announcement + focus contract from the issue; full arrow-key selection / form-submission semantics inside the group are intentionally left as a follow-up.\n\n## User Impact\n\nUsers who rely on a screen reader (NVDA, VoiceOver, JAWS) to navigate the chat input will now hear the Plan/Act toggle as a single selectable control rather than two unrelated switches, and will be able to determine the active mode from the announcement alone. Keyboard users benefit from the roving `tabIndex`, which keeps the toggle as a single tab stop.\n\n## Evidence\n\n- New component: `apps/vscode/webview-ui/src/components/chat/PlanActModeToggle.tsx`\n- Call-site update: `apps/vscode/webview-ui/src/components/chat/ChatTextArea.tsx` (the inline toggle markup and the unused `SwitchContainer`/`Slider` styled definitions are removed in favor of the new component; tooltip hover behavior is preserved via an `onHover` callback).\n- New test: `apps/vscode/webview-ui/src/components/chat/PlanActModeToggle.test.tsx` asserts the `radiogroup` name, the per-option `aria-checked`/label, the roving `tabIndex`, and the click-to-toggle contract.\n- Local validation:\n  - `bunx tsc --noEmit` is clean in both `apps/vscode` and `apps/vscode/webview-ui`.\n  - `bun run test` passes the full webview-ui suite (64 files, 484 tests).\n  - `bunx biome lint` on the new files reports only one info-level note (`useSemanticElements`) on the styled radio div, which is the documented pattern for this kind of toggle.\n\nFixes #4932",
+  "author_association": "NONE",
+  "user": {
+    "login": "xiaoguomeiyitian"
+  },
+  "assignees": [],
+  "labels": []
+}

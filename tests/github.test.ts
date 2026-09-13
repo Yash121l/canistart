@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fixtureKey, HttpGitHubClient, NotFoundError, RateLimitError, GitHubError } from '../src/github.js';
-import { FixtureGitHubClient } from './fixture-client.js';
+import { FixtureGitHubClient } from '../src/fixture-client.js';
 
 function response(status: number, body: unknown, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
