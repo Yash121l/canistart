@@ -44,21 +44,21 @@ maintainer's side. This does it from the contributor's side, before you write an
 
 ## What it checks
 
-- **issue** — state, assignees, lock, blocking labels (`needs discussion`, `blocked`,
+- **issue.** State, assignees, lock, blocking labels (`needs discussion`, `blocked`,
   `wontfix`, `duplicate`, `question`, `needs design`, `stale`), age, dormancy, whether
   any maintainer has replied.
-- **competing_prs** — pull requests that reference the issue, found through the search
+- **competing_prs.** Pull requests that reference the issue, found through the search
   API and the issue timeline, deduplicated. References to other repositories are
   discarded. Open ones fail, merged ones fail, closed unmerged ones warn.
-- **already_fixed** — the closing commit if the issue is closed, commits in the
+- **already_fixed.** The closing commit if the issue is closed, commits in the
   repository that mention the issue, and merged pull requests the discussion points at.
-- **policy** — `CONTRIBUTING.md`, `AI_POLICY.md`, the pull request template and the code
+- **policy.** `CONTRIBUTING.md`, `AI_POLICY.md`, the pull request template and the code
   of conduct, in the repository and in the organisation's `.github` repository. A fixed
   set of patterns, no model calls, classifies the AI stance as `bans_autonomous_agents`,
   `bans_ai`, `requires_disclosure`, `permits_with_responsibility` or `unknown`, and flags
   a CLA, a DCO, an ask-first rule, or a bot that closes unsolicited pull requests. The
   matching sentence is always quoted.
-- **repo_health** — archived, merge rate over the last twenty closed pull requests,
+- **repo_health.** Archived, merge rate over the last twenty closed pull requests,
   median time from open to merge, when an outside contributor last had something merged,
   open pull request count.
 
@@ -85,16 +85,16 @@ policy says: AI_POLICY.md: "We do not allow autonomous agents to be used for con
 
 Gate the agent on the exit code before it starts work.
 
-Claude Code, as a `UserPromptSubmit` or pre-task hook:
+In the script that hands an issue to the agent:
 
 ```sh
 #!/bin/sh
-# .claude/hooks/canistart.sh — exit non-zero to stop the run
 issue="$1"
 npx -y canistart "$issue" --agent --no-color || exit 1
+claude -p "Fix $issue"
 ```
 
-Codex or any shell-driven agent:
+For anything that reads JSON:
 
 ```sh
 if ! npx -y canistart "$ISSUE" --agent --json > verdict.json; then
