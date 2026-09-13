@@ -43,7 +43,8 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "pnpm run build && vitest run",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "prepare": "tsc -p tsconfig.build.json"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
