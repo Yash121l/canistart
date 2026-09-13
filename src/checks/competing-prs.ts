@@ -51,53 +51,42 @@ async function describe(ctx: CheckContext, pull: ApiPull): Promise<Evidence> {
   return { text: `#${pull.number} ${state}${draft} by @${pull.user.login}${extra}`, url: pull.html_url };
 }
 
-export async function checkCompetingPrs(ctx: CheckContext): Promise<CheckResult> {
-  const numbers = await candidateNumbers(ctx);
-  const pulls: ApiPull[] = [];
-  for (const number of numbers) {
-    const pull = await ctx.client
-      .get<ApiPull>(`repos/${ctx.ref.owner}/${ctx.ref.repo}/pulls/${number}`)
-      .catch(() => undefined);
-    if (pull) pulls.push(pull);
-  }
-
-  const merged = pulls.filter((pull) => pull.merged_at);
-  const open = pulls.filter((pull) => !pull.merged_at && pull.state === 'open');
-  const closed = pulls.filter((pull) => !pull.merged_at && pull.state !== 'open');
-  const evidence = await Promise.all(pulls.map((pull) => describe(ctx, pull)));
-
+function verdict(merged: ApiPull[], open: ApiPull[], closed: ApiPull[]): Pick<CheckResult, 'status' | 'summary'> {
   if (merged.length > 0) {
-    const labels = merged.map((pull) => `#${pull.number}`).join(', ');
     return {
-      id: 'competing_prs',
       status: 'fail',
-      summary: `Already merged: ${labels} references this issue.`,
-      evidence,
-      blocks_agents: false,
+      summary: `Already merged: ${merged.map((pull) => `#${pull.number}`).join(', ')} references this issue.`,
     };
   }
   if (open.length > 0) {
     return {
-      id: 'competing_prs',
       status: 'fail',
       summary: `${count(open.length, 'open pull request')} already ${open.length === 1 ? 'targets' : 'target'} this issue.`,
-      evidence,
-      blocks_agents: false,
     };
   }
   if (closed.length > 0) {
-    return {
-      id: 'competing_prs',
-      status: 'warn',
-      summary: `${count(closed.length, 'closed, unmerged pull request')} tried this before.`,
-      evidence,
-      blocks_agents: false,
-    };
+    return { status: 'warn', summary: `${count(closed.length, 'closed, unmerged pull request')} tried this before.` };
   }
+  return { status: 'pass', summary: 'No pull request references this issue.' };
+}
+
+export async function checkCompetingPrs(ctx: CheckContext): Promise<CheckResult> {
+  const numbers = await candidateNumbers(ctx);
+  const fetched = await Promise.all(
+    numbers.map((number) =>
+      ctx.client.get<ApiPull>(`repos/${ctx.ref.owner}/${ctx.ref.repo}/pulls/${number}`).catch(() => undefined),
+    ),
+  );
+  const pulls = fetched.filter((pull): pull is ApiPull => pull !== undefined);
+  const evidence = await Promise.all(pulls.map((pull) => describe(ctx, pull)));
+
   return {
     id: 'competing_prs',
-    status: 'pass',
-    summary: 'No pull request references this issue.',
+    ...verdict(
+      pulls.filter((pull) => pull.merged_at),
+      pulls.filter((pull) => !pull.merged_at && pull.state === 'open'),
+      pulls.filter((pull) => !pull.merged_at && pull.state !== 'open'),
+    ),
     evidence,
     blocks_agents: false,
   };

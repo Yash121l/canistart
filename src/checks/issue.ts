@@ -31,40 +31,19 @@ function matchLabels(issue: ApiIssue, wanted: string[]): string[] {
   return wanted.filter((label) => names.includes(label));
 }
 
-export async function checkIssue({ client, ref, now }: CheckContext): Promise<CheckResult> {
-  const path = `repos/${ref.owner}/${ref.repo}/issues/${ref.number}`;
-  const issue = await client.get<ApiIssue>(path);
-  const comments = await client.get<ApiComment[]>(`${path}/comments`, { per_page: 100 });
-
-  const url = issue.html_url;
-  const evidence: Evidence[] = [{ text: issue.title, url }];
-  const blocking = matchLabels(issue, BLOCKING_LABELS);
-  const positive = matchLabels(issue, POSITIVE_LABELS);
-  const acknowledged =
-    MAINTAINER_ROLES.has(issue.author_association) ||
-    comments.some((comment) => MAINTAINER_ROLES.has(comment.author_association));
-
-  for (const label of positive) evidence.push({ text: `labelled "${label}"`, url });
-
-  if (issue.state !== 'open') {
-    return { id: 'issue', status: 'fail', summary: `Issue is ${issue.state}.`, evidence, blocks_agents: false };
-  }
-  if (issue.locked) {
-    return { id: 'issue', status: 'fail', summary: 'Issue is locked, you cannot comment on it.', evidence, blocks_agents: false };
-  }
+function blocker(issue: ApiIssue): string | undefined {
+  if (issue.state !== 'open') return `Issue is ${issue.state}.`;
+  if (issue.locked) return 'Issue is locked, you cannot comment on it.';
   const assignee = issue.assignees[0];
-  if (assignee) {
-    const others = issue.assignees.length > 1 ? ` and ${issue.assignees.length - 1} more` : '';
-    return {
-      id: 'issue',
-      status: 'fail',
-      summary: `Issue is assigned to @${assignee.login}${others}.`,
-      evidence,
-      blocks_agents: false,
-    };
-  }
+  if (!assignee) return undefined;
+  const others = issue.assignees.length > 1 ? ` and ${issue.assignees.length - 1} more` : '';
+  return `Issue is assigned to @${assignee.login}${others}.`;
+}
 
+function concerns(issue: ApiIssue, acknowledged: boolean, now: Date, evidence: Evidence[]): string[] {
+  const url = issue.html_url;
   const warnings: string[] = [];
+  const blocking = matchLabels(issue, BLOCKING_LABELS);
   if (blocking.length > 0) {
     warnings.push(`blocking labels: ${blocking.join(', ')}`);
     for (const label of blocking) evidence.push({ text: `labelled "${label}"`, url });
@@ -83,14 +62,38 @@ export async function checkIssue({ client, ref, now }: CheckContext): Promise<Ch
     warnings.push('no maintainer reply');
     evidence.push({ text: 'no maintainer has commented on or opened this issue', url });
   }
+  return warnings;
+}
 
+export async function checkIssue({ client, ref, now }: CheckContext): Promise<CheckResult> {
+  const path = `repos/${ref.owner}/${ref.repo}/issues/${ref.number}`;
+  const issue = await client.get<ApiIssue>(path);
+  const comments = await client.get<ApiComment[]>(`${path}/comments`, { per_page: 100 });
+
+  const url = issue.html_url;
+  const evidence: Evidence[] = [{ text: issue.title, url }];
+  for (const label of matchLabels(issue, POSITIVE_LABELS)) evidence.push({ text: `labelled "${label}"`, url });
+
+  const blocked = blocker(issue);
+  if (blocked) return { id: 'issue', status: 'fail', summary: blocked, evidence, blocks_agents: false };
+
+  const acknowledged =
+    MAINTAINER_ROLES.has(issue.author_association) ||
+    comments.some((comment) => MAINTAINER_ROLES.has(comment.author_association));
+  const warnings = concerns(issue, acknowledged, now, evidence);
   if (warnings.length > 0) {
-    return { id: 'issue', status: 'warn', summary: `Issue is open but ${warnings.join('; ')}.`, evidence, blocks_agents: false };
+    return {
+      id: 'issue',
+      status: 'warn',
+      summary: `Issue is open but ${warnings.join('; ')}.`,
+      evidence,
+      blocks_agents: false,
+    };
   }
   return {
     id: 'issue',
     status: 'pass',
-    summary: `Issue is open, unassigned and ${count(age, 'day')} old.`,
+    summary: `Issue is open, unassigned and ${count(daysBetween(issue.created_at, now), 'day')} old.`,
     evidence,
     blocks_agents: false,
   };
