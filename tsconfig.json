@@ -13,10 +13,7 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "types": ["node"],
-    "outDir": "dist",
-    "rootDir": "src",
-    "declaration": true,
-    "sourceMap": true
+    "noEmit": true
   },
   "include": ["src", "tests", "scripts", "vitest.config.ts"]
 }
