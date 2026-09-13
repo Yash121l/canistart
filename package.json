@@ -1,0 +1,54 @@
+{
+  "name": "canistart",
+  "version": "0.1.0",
+  "description": "Should you start on this GitHub issue? Checks competing PRs, already-fixed, AI policy, and repo health before you or your agent begin.",
+  "keywords": [
+    "github",
+    "issues",
+    "triage",
+    "open-source",
+    "contributing",
+    "cli",
+    "ai-policy",
+    "agents"
+  ],
+  "license": "MIT",
+  "author": "Yash Lunawat <yash.lunawat@rtp.vc>",
+  "homepage": "https://github.com/Yash121l/canistart#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yash121l/canistart.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Yash121l/canistart/issues"
+  },
+  "type": "module",
+  "bin": {
+    "canistart": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "packageManager": "pnpm@11.24.0"
+}
