@@ -24,7 +24,7 @@
   },
   "type": "module",
   "bin": {
-    "canistart": "dist/cli.js"
+    "canistart": "dist/bin.js"
   },
   "exports": {
     ".": {

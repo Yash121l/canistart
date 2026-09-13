@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { parseArgs } from '../src/cli.js';
 
 const run = promisify(execFile);
-const BIN = 'dist/cli.js';
+const BIN = 'dist/bin.js';
 
 interface RunResult {
   stdout: string;

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 import { FixtureGitHubClient } from './fixture-client.js';
-import { GitHubError } from './github.js';
 import { canistart, VERSION, type CanistartResult } from './index.js';
 import type { CheckResult } from './types.js';
 
@@ -129,17 +128,4 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv): Promise<numb
       });
   process.stdout.write(`${output}\n`);
   return result.exit_code;
-}
-
-const entry = process.argv[1];
-if (entry !== undefined && import.meta.url === new URL(`file://${entry}`).href) {
-  main(process.argv.slice(2), process.env)
-    .then((code) => {
-      process.exitCode = code;
-    })
-    .catch((error: unknown) => {
-      const detail = error instanceof GitHubError ? error.message : (error as Error).message;
-      process.stderr.write(`canistart: ${detail}\n`);
-      process.exitCode = 3;
-    });
 }
