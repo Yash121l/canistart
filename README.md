@@ -10,12 +10,13 @@ npx canistart https://github.com/meriyah/meriyah/issues/650
 ```
 STOP  meriyah/meriyah#650  Improve the type def for `Labels`
 
-[ok] issue         Issue is open, unassigned and 3 days old.
-[ x] competing_prs 1 open pull request already targets this issue.
+[ok] issue              Issue is open, unassigned and 3 days old.
+[ x] competing_prs      1 open pull request already targets this issue.
      https://github.com/meriyah/meriyah/pull/652
-[ok] already_fixed No commit or merged pull request looks like a fix for this.
-[ -] policy        No contributing or AI policy document found.
-[ok] repo_health   Repo merges outside work: 100% merge rate, last outside merge 2 days ago.
+[ok] already_fixed      No commit or merged pull request looks like a fix for this.
+[ -] maintainer_signals Nobody has commented on this issue.
+[ -] policy             No contributing or AI policy document found.
+[ok] repo_health        Repo merges outside work: 100% merge rate, last outside merge 2 days ago.
 ```
 
 The issue looks open and unclaimed. Somebody opened a pull request for it three days
@@ -27,11 +28,27 @@ A clean one looks like this:
 ```
 GO  soran-ghaderi/torchebm#323  BaseScheduler has no __repr__, so scheduled parameters print as bare values
 
-[ok] issue         Issue is open, unassigned and 0 days old.
-[ok] competing_prs No pull request references this issue.
-[ok] already_fixed No commit or merged pull request looks like a fix for this.
-[ok] policy        Contributing docs: says nothing about AI.
-[ok] repo_health   Repo merges outside work: 95% merge rate, last outside merge 6 days ago.
+[ok] issue              Issue is open, unassigned and 0 days old.
+[ok] competing_prs      No pull request references this issue.
+[ok] already_fixed      No commit or merged pull request looks like a fix for this.
+[ok] maintainer_signals Nothing in the comments says to stop.
+[ok] policy             Contributing docs: says nothing about AI.
+[ok] repo_health        Repo merges outside work: 95% merge rate, last outside merge 6 days ago.
+```
+
+A comment can settle it on its own:
+
+```
+STOP  greghesp/ha-bambulab#2131  [Bug] P1S firmware 01.07.00.00 AMS slots shown as Empty since integration 2.2.23
+
+[ok] issue              Issue is open, unassigned and 0 days old.
+[ok] competing_prs      No pull request references this issue.
+[ !] already_fixed      May already be fixed: the discussion points at 2 merged pull requests.
+     https://github.com/greghesp/ha-bambulab/pull/2105
+[ x] maintainer_signals maintainer said fixed elsewhere: "Can you please test with v2.2.26?"
+     https://github.com/greghesp/ha-bambulab/issues/2131#issuecomment-5649177608
+[ok] policy             Contributing docs: says nothing about AI.
+[ok] repo_health        Repo merges outside work: 100% merge rate, last outside merge 1 day ago.
 ```
 
 ## Field test
@@ -59,6 +76,13 @@ maintainer's side. This does it from the contributor's side, before you write an
   discarded. Open ones fail, merged ones fail, closed unmerged ones warn.
 - **already_fixed.** The closing commit if the issue is closed, commits in the
   repository that mention the issue, and merged pull requests the discussion points at.
+- **maintainer_signals.** What the comments say. Each comment is classified by author
+  role (`OWNER`, `MEMBER` or `COLLABORATOR` is a maintainer, everyone else is a
+  contributor; bots are skipped) and matched against a small set of phrases: cannot
+  reproduce, already fixed elsewhere, hold off, claimed, won't fix. A maintainer saying
+  it is fixed elsewhere, on hold or not going to happen fails. A maintainer who cannot
+  reproduce it warns, as does anyone else carrying one of those signals in the last
+  sixty days. The matched sentence and the comment link are quoted.
 - **policy.** `CONTRIBUTING.md`, `AI_POLICY.md`, the pull request template and the code
   of conduct, in the repository and in the organisation's `.github` repository. A fixed
   set of patterns, no model calls, classifies the AI stance as `bans_autonomous_agents`,
@@ -74,8 +98,8 @@ maintainer's side. This does it from the contributor's side, before you write an
 | verdict | exit | meaning |
 | --- | --- | --- |
 | GO | 0 | open, unclaimed, no competing work, no policy problem, the repo merges outside pull requests |
-| CAUTION | 1 | worth a look first: closed competing attempts, a dormant issue, disclosure rules, a slow repo |
-| STOP | 2 | closed or already fixed, assigned, an open competing pull request, an archived repo, a bot that closes unsolicited pull requests |
+| CAUTION | 1 | worth a look first: closed competing attempts, a dormant issue, a maintainer who cannot reproduce it, somebody who recently claimed it, disclosure rules, a slow repo |
+| STOP | 2 | closed or already fixed, assigned, an open competing pull request, a maintainer who said it is fixed elsewhere, on hold or not planned, an archived repo, a bot that closes unsolicited pull requests |
 | | 3 | canistart itself failed |
 
 `--agent` turns an AI or autonomous-agent ban into STOP instead of CAUTION, and prints
@@ -159,9 +183,12 @@ Publishing runs from `.github/workflows/publish.yml` on a `v*` tag and needs an
 ## Limits
 
 No model calls, so "already fixed" is only as good as what the API states outright: a
-closing commit, a referencing commit, a merged pull request somebody linked. A
-maintainer writing "try 2.2.26" in a comment reads as CAUTION, not STOP. GitHub only.
-It reads; it never comments, assigns or opens anything.
+closing commit, a referencing commit, a merged pull request somebody linked.
+`maintainer_signals` is keyword matching, not understanding: it looks for a short list of
+phrases in comment sentences, skipping quoted lines and code blocks. It misses a
+maintainer who says the same thing in other words, and it can fire on a sentence that
+only looks like one of them. Always read the comment it quotes before acting on the
+verdict. GitHub only. It reads; it never comments, assigns or opens anything.
 
 ## License
 

@@ -1,0 +1,62 @@
+[
+  {
+    "user": {
+      "login": "p0deje",
+      "type": "User"
+    },
+    "author_association": "OWNER",
+    "body": "Please provide a screen recording, I can't reproduce this problem.",
+    "created_at": "2026-08-12T14:02:27Z",
+    "html_url": "https://github.com/p0deje/Maccy/issues/1506#issuecomment-5267860473"
+  },
+  {
+    "user": {
+      "login": "Yash121l",
+      "type": "User"
+    },
+    "author_association": "NONE",
+    "body": "I could reproduce this without any user action: any pasteboard change-count bump that carries identical contents (Universal Clipboard re-sync, an app re-asserting its data, lazy data being fulfilled) is treated as a new copy, and once the matching history entry is deleted there is nothing to merge into, so it comes back as the newest item. #1538 makes Clipboard ignore repeats of the just-deleted contents until something else is copied, with a test that fails on master.",
+    "created_at": "2026-09-13T20:08:37Z",
+    "html_url": "https://github.com/p0deje/Maccy/issues/1506#issuecomment-5655796769"
+  },
+  {
+    "user": {
+      "login": "p0deje",
+      "type": "User"
+    },
+    "author_association": "OWNER",
+    "body": "@Yash121l Can you provide a decent test-case to reproduce this? This, for now, reads as LLM making things up.",
+    "created_at": "2026-09-14T16:45:26Z",
+    "html_url": "https://github.com/p0deje/Maccy/issues/1506#issuecomment-5667461723"
+  },
+  {
+    "user": {
+      "login": "Yash121l",
+      "type": "User"
+    },
+    "author_association": "NONE",
+    "body": "@p0deje I'll share it as i get free, et 1-2 hr.",
+    "created_at": "2026-09-14T16:47:09Z",
+    "html_url": "https://github.com/p0deje/Maccy/issues/1506#issuecomment-5667482927"
+  },
+  {
+    "user": {
+      "login": "Yash121l",
+      "type": "User"
+    },
+    "author_association": "NONE",
+    "body": "Fair ask. Here is what I have and what I do not.\n\nWhat I can reproduce, deterministically, is the mechanism: Maccy treats any `NSPasteboard.general.changeCount` increase as a new copy without comparing contents (`Clipboard.checkForChangesInPasteboard` only checks `pasteboard.changeCount != changeCount`). Steps, as a test rather than a GUI walk-through since the trigger is a pasteboard event:\n\n1. Put \"hello\" on the pasteboard; Maccy records it.\n2. Delete that entry in Maccy.\n3. Bump the change count with identical contents (`pasteboard.clearContents()` then `setString(\"hello\", forType: .string)` again, which is what any app or Universal Clipboard sync does when it re-declares the same data).\n4. Maccy's poller runs `checkForChangesInPasteboard` and re-inserts \"hello\" as the newest item. `History.add` cannot merge it because the entry it would supersede is gone.\n\nThat is `testDoesNotRestoreDeletedItemStillOnPasteboard` in #1538; it fails on master with the deleted item back in `history.items` and passes with the fix. `testRestoresDeletedItemNoLongerOnPasteboard` pins that copying the same text again after deleting it, once the pasteboard has since held something else, still re-adds it as before.\n\nWhat I do not have is a confirmed real-world trigger for step 3 on the reporter's machine. The issue gives no steps, and I could not make the item come back by any in-process path: delete after paste, delete during search, multi-delete, or the storage reload. The only path that resurrects it is an external change-count bump carrying identical contents. Whether the reporter hits that from Universal Clipboard, an app re-asserting its pasteboard on focus, or something else, I cannot say without their recording.\n\nIf you would rather wait for the reporter to confirm before touching this, I will close #1538 and reopen it once there is a recording that matches.\n",
+    "created_at": "2026-09-14T17:41:42Z",
+    "html_url": "https://github.com/p0deje/Maccy/issues/1506#issuecomment-5668159484"
+  },
+  {
+    "user": {
+      "login": "p0deje",
+      "type": "User"
+    },
+    "author_association": "OWNER",
+    "body": "@Yash121l Please stop copy-pasting LLM output, it drains a lot of energy to read it, especially since it's exactly the same as you shared before. You clearly don't reproduce the bug, so I have no trust in what was suggested as a fix. After all, if you remove an item and then copy the same item again, it should reappear.",
+    "created_at": "2026-09-14T18:08:21Z",
+    "html_url": "https://github.com/p0deje/Maccy/issues/1506#issuecomment-5668486765"
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "total_count": 53,
+  "items": [
+    {
+      "number": 1540,
+      "title": "Allow ignoring apps outside /Applications",
+      "html_url": "https://github.com/p0deje/Maccy/pull/1540",
+      "state": "open",
+      "state_reason": null,
+      "locked": false,
+      "created_at": "2026-09-14T11:30:01Z",
+      "updated_at": "2026-09-14T11:30:01Z",
+      "closed_at": null,
+      "draft": false,
+      "body": "Fixes #991\n\nApps outside `/Applications`, such as ones in `~/Applications`, silently fail to add to the ignored apps list.\n\nThe app picker uses SwiftUI `fileImporter` and reads the selected app with `Bundle(path:)`. Because Maccy is sandboxed, the URL it gets back is security-scoped, and reading it requires `startAccessingSecurityScopedResource()` first. That call was missing. `/Applications` is readable from the sandbox anyway, so apps there worked. For any other location, `Bundle(path:)` returned `nil` and the selection was dropped with no error.\n\nThis change starts access before reading the bundle and stops it afterwards.\n\nHow I checked:\n- I built a small ad-hoc signed app bundle with Maccy's sandbox entitlements (`app-sandbox` + `files.user-selected.read-only`). Inside it, `Bundle(path:)` returns `com.apple.Safari` for `/Applications/Safari.app` but `nil` for an app in `~/Applications`. Unsandboxed, both return a bundle id.\n- The Debug build succeeds and SwiftLint is clean for the changed file.\n- I couldn't script the open panel end to end on my machine, so it would be good if someone picks an app from `~/Applications` in the Ignore settings to confirm.\n\nImplemented with Claude Code; I reviewed and tested the change.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01MA8JGs7pCoXFL2W6jEJ8sD\n",
+      "author_association": "NONE",
+      "user": {
+        "login": "anandghegde",
+        "type": "User"
+      },
+      "assignees": [],
+      "labels": [],
+      "pull_request": {
+        "merged_at": null
+      }
+    }
+  ]
+}

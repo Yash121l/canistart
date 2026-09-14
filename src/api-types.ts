@@ -1,5 +1,6 @@
 export interface ApiUser {
   login: string;
+  type?: string;
 }
 
 export interface ApiIssue {
@@ -24,6 +25,7 @@ export interface ApiComment {
   user: ApiUser;
   author_association: string;
   body?: string | null;
+  created_at?: string;
   html_url?: string;
 }
 

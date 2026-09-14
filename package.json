@@ -1,6 +1,6 @@
 {
   "name": "canistart",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Should you start on this GitHub issue? Checks competing PRs, already-fixed, AI policy, and repo health before you or your agent begin.",
   "keywords": [
     "github",

@@ -1,0 +1,402 @@
+[
+  {
+    "number": 1538,
+    "title": "Don't restore deleted item when pasteboard is re-declared",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1538",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-13T20:07:44Z",
+    "updated_at": "2026-09-14T18:08:27Z",
+    "closed_at": "2026-09-14T18:08:27Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Fixes #1506.\n\nMaccy treats every change to `NSPasteboard.general.changeCount` as a new copy, without checking whether the contents actually changed. Usually you never notice, because the item it builds supersedes the one already in history and `History.add` merges the two. But if you have just deleted that entry there is nothing left to merge into, so the next change count bump adds it back. Since it is whatever is currently on the clipboard, it is always the newest entry that comes back.\n\nChange counts get bumped with identical contents fairly often without the user copying anything: Universal Clipboard re-syncing, applications re-asserting their pasteboard data, lazily provided data being fulfilled. That is why this is hard to reproduce on a machine where none of those happen.\n\nWhat changed:\n\n- `HistoryItem` can describe itself by a signature of its meaningful contents, reusing the existing `transientTypes` list so the types that only say where a copy came from are left out.\n- `Clipboard` remembers the signature of the contents it last recorded together with the change count it came from. When an item is deleted, `History` tells `Clipboard` about it. If that item is exactly what is on the pasteboard at that moment, `Clipboard` ignores further changes carrying the same contents until something else is copied.\n\nDeleting an entry that is no longer on the clipboard is unaffected, and copying it again later still adds it back.\n\nVerified with two tests in `MaccyTests/ClipboardTests.swift`: one fails on master and passes with the fix, the other pins down that a deleted entry which is not on the pasteboard is still added again when it is copied. The rest of `MaccyTests` is unchanged. `testIgnoreApplication` and `testIgnoreAllApplicationsExcept` already fail on master here because they expect Xcode or Finder to be the frontmost application. SwiftLint reports no new violations.\n",
+    "author_association": "NONE",
+    "user": {
+      "login": "Yash121l",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1522,
+    "title": "Add an option to never write history to disk",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1522",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-30T22:44:29Z",
+    "updated_at": "2026-09-11T09:09:19Z",
+    "closed_at": "2026-09-11T09:09:19Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Closes #733. Also covers the write-ahead log part of #608.\n\n@p0deje you wrote on #733 that you wouldn't mind supporting this but wouldn't get to implementing it, so here is an attempt.\n\n### Problem\n\nThe history is always persisted to `Storage.sqlite`. \"Clear history on quit\" deletes the items, but the store stays on disk, and SQLite keeps the write-ahead log next to it — which is the point raised in #608, where cleared items were still recoverable from the log.\n\n### Change\n\nA new \"Never write history to disk\" option in Advanced settings backs the model container with an in-memory store, and removes an existing store on launch together with its `-wal` and `-shm` files. The container is built once at startup, so the description notes that it takes effect after a restart.\n\nThe in-memory configuration is the same one the test suite already uses, so this adds no new dependency on the storage layer.\n\n### Verification\n\nBuilt and ran the unit tests on macOS 26.6 / Xcode 26.6. `MaccyTests` passes except `ClipboardTests.testIgnoreAllApplicationsExcept` and `ClipboardTests.testIgnoreApplication`, which fail the same way on an unmodified checkout here, so they look unrelated to this change. SwiftLint reports nothing new.\n\nI also verified the storage behaviour directly, since the `-wal`/`-shm` naming is easy to get wrong:\n\n```\non-disk store leaves:      [\"Storage.sqlite\", \"Storage.sqlite-shm\", \"Storage.sqlite-wal\"]\nafter removal:             []\nin-memory store:           100 items readable, directory stays empty\n```\n\n### Notes\n\nOnly the English strings are included, since the other locales are generated.\n\nI made this a standalone toggle rather than a sub-option of \"Clear history on quit\" — enabling it implies the history is gone on quit anyway, and nesting it would mean defining what happens when the parent is off. Happy to nest it if you would rather keep the settings grouped that way. I'd also be glad to add a test if you can point me at how you'd want the storage layer covered, given `AppDelegate.isTesting` already forces an in-memory store.\n",
+    "author_association": "NONE",
+    "user": {
+      "login": "jx-grxf",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1529,
+    "title": "Translations update from Hosted Weblate",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1529",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-09-04T17:51:31Z",
+    "updated_at": "2026-09-04T21:41:12Z",
+    "closed_at": "2026-09-04T21:41:11Z",
+    "merged_at": "2026-09-04T21:41:11Z",
+    "draft": false,
+    "body": "Translations update from [Hosted Weblate](https://hosted.weblate.org) for [Maccy/Main Popup](https://hosted.weblate.org/projects/maccy/app/).\n\n\n\nCurrent translation status:\n\n![Weblate translation status](https://hosted.weblate.org/widget/maccy/app/matrix-auto.svg)",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "weblate",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1524,
+    "title": "Strip U+FFFC from titles to avoid CoreText hang on macOS 26",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1524",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-31T09:39:27Z",
+    "updated_at": "2026-08-31T16:00:26Z",
+    "closed_at": "2026-08-31T16:00:25Z",
+    "merged_at": "2026-08-31T16:00:25Z",
+    "draft": false,
+    "body": "Fixes #1520.\n\n## What hangs\n\nA title holding two or more U+FFFC (OBJECT REPLACEMENT CHARACTER) next to\nnon-Latin text sends `__NSCoreTypesetterTruncateLine` into an infinite loop when\n`ListItemTitleView` lays it out with `.lineLimit(1)` + `.truncationMode(.middle)`.\nOne core sits at 100%, the window never draws, and there's no in-app way out.\n\nU+FFFC is the placeholder for an inline attachment, so any rich-text copy with\nembedded images carries one per attachment in its plain-text flavor — a chat\nmessage with two inline emoticons is enough. Because `generateTitle()` persisted\nthe character, the hang came back on every launch.\n\n## Changes\n\n**`String+UnsafeForTitleLayout.swift`** (new) — `containsScalarsUnsafeForTitleLayout`\nand `removingScalarsUnsafeForTitleLayout()`, backed by a set that currently holds\nonly U+FFFC.\n\n**`HistoryItem.generateTitle()`** — strip after `shortened(to: 1_000)`, before the\n`showSpecialSymbols` substitutions, so the existing `⏎`/`⇥`/`·` behaviour is\nuntouched.\n\n**`Storage.sanitizeTitles()` + migration `2026-08-31-sanitize-history-item-titles`** —\nheals titles already in the store. Without it, an affected user still can't launch\nthe app after upgrading; they'd have to edit `Storage.sqlite` by hand, which is\nwhat I had to do. It runs in `migrateUserDefaults()` from\n`applicationDidFinishLaunching`, before the panel is built and the history is\nfirst rendered. Follows the shape of the existing\n`2026-08-12-cleanup-orphaned-history-item-contents` migration.\n\n## Two implementation notes\n\n**Filtering is per Unicode scalar, not per Character.** `\"\\u{FFFC}\\u{0301}\"` is a\nsingle `Character` — U+FFFC plus a combining mark form one grapheme cluster — so\n`filter { $0 != \"\\u{FFFC}\" }` doesn't match it and the hang survives. I confirmed\nthis is not theoretical:\n\n```\n2x (FFFC + U+0301) + CJK:  HANG\n  after Character filter:  HANG    ← looks right, doesn't fix it\n  after scalar filter:     ok\n```\n\n**Only U+FFFC is in the set.** I swept 55 candidates — every C0 control character,\nU+FFFD, ZWSP, BOM, LS/PS, soft hyphen, bidi controls, word joiner, interlinear\nannotation (U+FFF9–FFFB), private use, invisible math operators. U+FFFC was the\nonly one that hangs, so nothing else is dropped. The set makes it easy to extend\nif another one turns up.\n\nOnly the display title is affected; `HistoryItemContent` is untouched, so pasting\nstill yields the original data including its attachments. Dedup compares contents\nvia `supersedes()`, not titles, so matching is unaffected.\n\n## Testing\n\n`UnsafeForTitleLayoutTests` (17 assertions) covers leading/trailing/interior/\nmultiple occurrences, all-unsafe input, the grapheme-cluster case, and that\nU+FFFD, ZWSP, BOM, emoji, flag sequences, combining marks, and `⏎`/`⇥`/`·` all\nsurvive. Two cases added to `HistoryItemTests` cover the full `generateTitle()`\npath.\n\nI should be straight about what I could and couldn't run: this machine has only\nCommandLineTools, no full Xcode, so **I could not run `xcodebuild` or the XCTest\nsuite** — CI will be the first real run of them. What I did verify by compiling\nthe two new source files directly with `swiftc`:\n\n- all 17 test assertions pass as plain checks against the real extension source\n- every string previously confirmed to hang renders fine after sanitization\n  (CJK, Japanese, Hangul, emoji, multiple occurrences, the combining-mark case)\n- an unsanitized control still hangs in the same harness, so the check isn't vacuous\n- `plutil -lint` passes on the modified `project.pbxproj`, and the four new object\n  IDs resolve correctly in the build graph\n\nPlease give the Xcode build and the test suite a look, since I couldn't.\n\nOne thing I'd flag for your judgement: I picked the migration date `2026-08-31`\nfor the key. If this lands on a different date you may want to rename it, though\nsince the key only needs to be unique it works either way.\n\nHappy to split the migration into its own PR, drop it, or adjust the naming if\nyou'd prefer a smaller change.\n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "Primer-Fan",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1387,
+    "title": "fix: prevent HistoryItemContent orphaning during duplicate resolution",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1387",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-04-29T05:50:04Z",
+    "updated_at": "2026-08-13T14:09:22Z",
+    "closed_at": "2026-08-13T14:09:22Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Summary\n\nFixes a bug where adding a duplicate clipboard item could leave orphaned `HistoryItemContent` rows in the SwiftData store with `item == nil`, and cascade deletion of the existing item could delete content objects shared with the replacement item.\n\n## Root Cause\n\nIn `History.add(_:)` (Maccy/Observables/History.swift:147-163), when a duplicate was detected:\n\n1. The incoming item was already persisted to SwiftData (line 140)\n2. Its contents were replaced with the existing item's contents (line 149)\n3. The original contents were left orphaned in the store\n4. The existing item was cascade-deleted, which could wipe content objects now referenced by the replacement\n\n## Fix\n\n- Delete the incoming item's contents from the store before replacing them (prevents orphaning)\n- Detach the existing item's contents (`existingHistoryItem.contents = []`) before cascade deletion (prevents shared content from being wiped)\n- Both operations are gated behind `if isModified(item) == nil`, so they only run when contents are actually transferred\n\n## Testing\n\nAdded `testDuplicateDoesNotOrphanContents` which verifies:\n- Exactly 1 `HistoryItemContent` row exists after duplicate merge\n- The surviving content has a valid `item` reference\n\nCloses #1368",
+    "author_association": "NONE",
+    "user": {
+      "login": "Project-A-E-G-I-S",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1498,
+    "title": "Fix orphaned history item content cleanup",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1498",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-08T18:05:00Z",
+    "updated_at": "2026-08-13T14:08:50Z",
+    "closed_at": "2026-08-13T14:08:50Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Fixes #1496\n\n## Summary\n\n- Delete history content explicitly before deleting its parent item, instead of relying on SwiftData cascade behavior.\n- Remove all live content during clear operations and purge any pre-existing orphaned content.\n- Run a one-time startup cleanup for persisted orphaned rows, retrying on a later launch if it fails.\n- Avoid persisting discarded content while resolving duplicate history entries.\n\n## Tests\n\n- Added orphan-count assertions for duplicate merging, size eviction, individual deletion, clearing unpinned history, and clearing all history.\n- Added coverage for cleaning an existing orphan without deleting live content.\n\n## Validation\n\n- `xcodebuild test -quiet -project Maccy.xcodeproj -scheme Maccy -destination 'platform=macOS,arch=arm64' -only-testing:MaccyTests/HistoryTests CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY=''` — passed (14 tests).\n- The full `MaccyTests` suite has two existing system-pasteboard failures in this local environment: `ClipboardTests/testIgnoreAllApplicationsExcept` and `ClipboardTests/testIgnoreApplication`. Both reproduce unchanged on commit `02dd0a3`.\n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "hhe48203-ctrl",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1509,
+    "title": "Prevent and cleanup orphaned `HistoryItemContent`",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1509",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-12T18:19:58Z",
+    "updated_at": "2026-08-13T00:05:03Z",
+    "closed_at": "2026-08-13T00:05:01Z",
+    "merged_at": "2026-08-13T00:05:01Z",
+    "draft": false,
+    "body": "Based on #1498 with a few improvements.",
+    "author_association": "OWNER",
+    "user": {
+      "login": "p0deje",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1507,
+    "title": "Make ignore-application Clipboard tests host-agnostic",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1507",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-11T12:38:43Z",
+    "updated_at": "2026-08-12T15:34:06Z",
+    "closed_at": "2026-08-12T15:34:05Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "`testIgnoreApplication` and `testIgnoreAllApplicationsExcept` hardcode the ignored/allowed apps as `[\"com.apple.dt.Xcode\", \"com.apple.finder\"]` with the comment `// Finder is on Bitrise`. `Clipboard` reads the copy's source from `NSWorkspace.shared.frontmostApplication`, so those bundle ids only match on Bitrise (where one of them is genuinely frontmost). On any other host the source app is different, the ignore-app branch resolves the wrong way, and both tests fail.\n\n**Fix is:** use the real frontmost application's bundle id (`NSWorkspace.shared.frontmostApplication?.bundleIdentifier`, falling back to `Bundle.main`) so the tests exercise the ignore-app branch regardless of where they run.\n\n**Verification** (Xcode 26.4.1, ad-hoc signing, `-only-testing:MaccyTests/ClipboardTests/...`):\n- Before: both tests fail on this host — `testIgnoreApplication` (inverted hook fires) and `testIgnoreAllApplicationsExcept` (`Asynchronous wait failed … \"Hook is called\"`), 6/6 iterations red.\n- After: both pass, 0 failures.\n- `swiftlint lint --strict` clean on the file; build-for-testing succeeds.\n- On Bitrise the frontmost app is still Finder/Xcode, so the resolved bundle id matches there too — no regression for CI.\n\nSelf-found while running the local test gate (the two failures are part of the pre-existing off-Bitrise red).",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "YuriNachos",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1448,
+    "title": "VoiceOver accessibility improvements for the clipboard history panel",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1448",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-07-09T14:30:31Z",
+    "updated_at": "2026-08-12T15:33:04Z",
+    "closed_at": "2026-08-12T15:32:42Z",
+    "merged_at": "2026-08-12T15:32:42Z",
+    "draft": false,
+    "body": "# VoiceOver accessibility improvements for the clipboard history panel\n\n## A bit about me\n\nI'm a junior developer taking some of my first real steps into open source — and into\naccessibility work specifically. I lost my sight in 2020, and VoiceOver has been how\nI've done everything on a Mac since, including, now, contributing code. This is one of\nthe first accessibility PRs I've ever attempted on GitHub, so please be gentle 🙂\n\n## Why this PR\n\nMaccy is genuinely great, and it's an app I use constantly. But using it with VoiceOver\ntoday ranges from \"confusing\" to \"basically not possible\" in a few key spots: there's no\nway to tell which history item is selected, several buttons just announce as generic\nsystem icon names with no indication of what they actually do, and arrow-key navigation\nthrough your clipboard history is completely silent.\n\nI'll be honest about the scope of who this matters to: this PR is essentially invisible\nto 99% of the people who'll ever look at this repo. But for the 100% of people who\nnavigate macOS with a screen reader, it's the difference between being able to use Maccy\nat all, or not.\n\n## What this changes\n\n- **History rows are now real accessible elements**, not just painted highlights. Each\n  row exposes its full content (title, source app, pinned status), a proper button\n  trait, and two actions — Pin/Unpin and Delete — reachable directly from VoiceOver.\n- **Arrow-key navigation now announces the selected item** (title, app it was copied\n  from, and whether it's pinned). Before this, moving through your history with the\n  keyboard produced no feedback at all.\n- **The quick-action toolbar (Pin, Delete, copy extracted text, remove from paste\n  stack) now has real labels.** These were announcing as raw system icon names (e.g.\n  the pin icon just read as \"pin marker\") instead of saying what the button does —\n  something I only caught by actually using it live with VoiceOver, not by reading\n  the code.\n- **The status bar icon now has a label** (\"Maccy — clipboard history\"), so it's\n  identifiable when scanning the menu bar instead of being an anonymous icon.\n- **Search field**: the \"clear search\" button now has a label, and the decorative\n  magnifying glass icon is hidden from the accessibility tree instead of being read\n  as clutter.\n- **The preview toggle button** now announces \"Show preview\" / \"Hide preview\"\n  depending on its current state, instead of nothing.\n- **The footer's Clear / Clear all buttons** are now properly hidden from\n  accessibility when visually hidden — previously both existed in the accessibility\n  tree simultaneously (one invisible), which meant a screen reader user could\n  accidentally trigger \"Clear all\" while intending to trigger \"Clear.\"\n- **8 settings controls** (sliders, pickers, and keyboard shortcut recorders) that\n  had no accessible label — VoiceOver would announce just the raw value with zero\n  context about what setting it belonged to.\n- **Spanish translations** for every new accessibility string, alongside the English\n  originals.\n\n## How I tested it\n\nI didn't just read the source and guess. I built a debug version of the app and\ntested every one of these changes live, with real VoiceOver, on my own Mac — copying\ntext, navigating history, pinning items, opening Settings, all of it. A few of the\nbugs above (especially the toolbar icon-labeling one) only became obvious once I was\nactually navigating with a screen reader instead of reading Swift — the kind of thing\nthat's genuinely hard to catch from code review alone.\n\n## What's *not* in this PR\n\nThere's an open question I looked into but couldn't responsibly resolve here: whether\nVoiceOver's cursor reliably reaches the history popup at all when it opens (it's a\nnon-activating panel, which is exactly the reason it doesn't steal focus from whatever\napp you're about to paste into). I found and reverted an attempted fix for this after\nrealizing it would silently break pasting into the wrong app — not something I was\nwilling to ship. My own live test suggests VoiceOver *does* reach the panel in\npractice, but I'd rather flag this as unresolved than claim more confidence than I\nactually have.\n\n## Being upfront\n\nI know a PR like this, from someone this new both to the project and to accessibility\nwork in general, most likely won't get merged exactly as-is — maybe some of these\nchoices don't match how you'd want to approach it, maybe the scope should be split up,\nmaybe there's context about the codebase I'm missing. All of that's completely fine.\nI mostly just wanted Maccy — an app I already rely on — to be a little more usable for\npeople like me.\n\nThank you, genuinely, for taking the time to read this far. 🙏\n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "joelnicolastorello-lgtm",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1508,
+    "title": "Clear is_disjoint SwiftLint violation",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1508",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-11T12:50:07Z",
+    "updated_at": "2026-08-12T14:06:36Z",
+    "closed_at": "2026-08-12T14:06:36Z",
+    "merged_at": "2026-08-12T14:06:36Z",
+    "draft": false,
+    "body": "`swiftlint lint --strict` reports a single violation in the repo, in the `2025-07-04-add-jpeg-heic` migration:\n\n```\nMaccy/AppDelegate.swift:143:17 is_disjoint violation: Use isDisjoint(with:) instead of intersection\n```\n\nThe migration checks whether the enabled pasteboard types already overlap with the image types before adding them:\n\n```swift\nif !types.intersection(StorageType.images.types).isEmpty {\n  types.formUnion(StorageType.images.types)\n}\n```\n\n**Fix is:** swap `!types.intersection(...).isEmpty` for the logically identical `!types.isDisjoint(with:)` — \"not disjoint\" is the same as \"intersection non-empty\". No behavior change.\n\n**Verification:** `swiftlint lint --strict` goes from `Found 1 violation, 1 serious` to `Found 0 violations`; `xcodebuild build` succeeds. Behavior-equivalent refactor, so no test is added.",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "YuriNachos",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1389,
+    "title": "feat: show image pixel dimensions in preview panel",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1389",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-04-29T05:51:08Z",
+    "updated_at": "2026-08-11T15:52:41Z",
+    "closed_at": "2026-08-11T15:52:41Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "## Summary\n\nAdds pixel dimensions (e.g., \"1920×1080\") to image previews in the slideout panel. Displayed both as an overlay on the image and as a metadata row.\n\n## Implementation\n\n**HistoryItemDecorator.imageDimensions** (Maccy/Observables/HistoryItemDecorator.swift:44-51)\n- Reads pixel dimensions from `NSBitmapImageRep.pixelsWide`/`pixelsHigh`\n- Falls back to `NSImage.size` when no bitmap representation is available\n\n**PreviewItemView.swift**\n- Image overlay (bottom-right, semi-transparent black background): lines 24-34\n- Metadata row alongside Application, FirstCopyTime, LastCopyTime, NumberOfCopies: lines 103-108\n\n**Localization**\n- Added `\"ImageDimensions\" = \"Dimensions:\"` key to `en.lproj/PreviewItemView.strings`\n\nCloses #1139",
+    "author_association": "NONE",
+    "user": {
+      "login": "Project-A-E-G-I-S",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1505,
+    "title": "Keep settings window from becoming too narrow",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1505",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-10T14:45:29Z",
+    "updated_at": "2026-08-11T13:46:28Z",
+    "closed_at": "2026-08-11T13:46:20Z",
+    "merged_at": "2026-08-11T13:46:20Z",
+    "draft": false,
+    "body": "Closes #1349\n\nSet a 500-point minimum content width on the settings window so narrower panes, particularly Advanced, do not make localized content feel cramped.\n\nTesting:\n- macOS build succeeds\n- opened Settings and switched to the Advanced tab using macOS UI automation\n- confirmed the minimum width is applied\n\nThe full baseline test suite still reports existing clipboard timing failures unrelated to this change.",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "EhsanAzish80",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1422,
+    "title": "Add clipboard automations",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1422",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-06-18T21:45:38Z",
+    "updated_at": "2026-08-11T11:15:46Z",
+    "closed_at": "2026-08-10T21:43:05Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "Add an automations pane where users can configure scripts to run on matching clipboard regexps.\r\n\r\n* Scripts run via `NSUserUnixTask` from `~/Library/Application Scripts/<bundle-id>/`, which executes them outside the app sandbox with the user's normal privileges (network, filesystem, Homebrew tools)\r\n* Clipboard contents is passed to scripts via stdin, and if the script writes output, that output will be added to the top of the clipboard history and replace current pasteboard contents\r\n* Although scripts are the only automation type right now, this can be expanded in future to allow other (built-in) transformations (e.g. could potentially cover the use-cases in #1413, #1386)\r\n\r\n**Screenshot/example**\r\n\r\nIn the following example, I've written a script to convert plain text GitHub PR URLs to a HTML link with the PR name as the title:\r\n\r\n<img width=\"624\" height=\"692\" alt=\"Screenshot 2026-06-18 at 23 31 38\" src=\"https://github.com/user-attachments/assets/b2ddcc7f-fe1a-44bc-a973-1ea49259b5f5\" />\r\n",
+    "author_association": "NONE",
+    "user": {
+      "login": "dansimau",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1495,
+    "title": "fix: keep evaluating ignore-regex rules after a malformed pattern",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1495",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-08T12:18:37Z",
+    "updated_at": "2026-08-10T13:48:12Z",
+    "closed_at": "2026-08-10T05:30:57Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "A single malformed entry in **Ignore → Regexp** silently disabled the entire ignore-regex\nfeature. When `NSRegularExpression(pattern:)` threw on a bad pattern, `Clipboard.shouldIgnore(_:)`\ncaught the error and `return false`, aborting the whole ignore decision: it stopped checking\nevery later rule _and_ returned \"do not ignore\" even when a valid sibling rule would have matched.\n\n### Steps to reproduce\n1. Maccy → Settings → Ignore → add two regexp rules: `[` (malformed, unclosed character class) and `sec.*` (valid).\n2. Copy the string `secret`.\n3. `secret` is recorded into history — but it should be ignored, because `sec.*` matches `secret`.\n\n`defaults read org.p0deje.Maccy ignoreRegexp`:\n    ignoreRegexp = (\"[\", \"sec.*\");\n\n### Fix is\nIn `Clipboard.shouldIgnore(_:)`, change the malformed-pattern `catch` from `return false` to\n`continue`, so the remaining rules are still evaluated and a valid sibling can still match.\n(A pattern that throws can never have matched anyway, so skipping it loses nothing.)\n\n### Regression test\n`MaccyTests/ClipboardTests.testIgnoreRegexpContinuesAfterInvalidPattern` — sets\n`ignoreRegexp = [\"[\", \"sec.*\"]`, copies `\"secret\"`, asserts the `onNewCopy` hook does **not**\nfire (the item is ignored via `sec.*`). Fails on unpatched `master` (hook fires, `secret`\ninserted), passes with the fix. Also adds save/restore of `Defaults[.ignoreRegexp]` in\nsetUp/tearDown (it was not previously saved/restored).\n\nScope is intentionally limited to the regex loop's malformed-pattern handling.",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "YuriNachos",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1492,
+    "title": "Fix String.shortened(to:) returning one character too many",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1492",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-07T19:32:04Z",
+    "updated_at": "2026-08-10T13:43:56Z",
+    "closed_at": "2026-08-07T20:28:50Z",
+    "merged_at": "2026-08-07T20:28:50Z",
+    "draft": false,
+    "body": "## Problem\n\n`String.shortened(to:)` returned one character too many. It used a closed range `self[...index(startIndex, offsetBy: maxLength)]`, which includes the end index — so `\"abcdef\".shortened(to: 3)` returned `\"abcd\"` (4 characters) instead of `\"abc\"`.\n\n## Fix\n\nUse a half-open range `self[startIndex..<index(startIndex, offsetBy: maxLength)]`, so the result contains at most `maxLength` characters.\n\n## Test\n\nNew `ShortenedTests` covers: returns at most `maxLength`; no-op when within limit; no-op for a large cap; and a loop asserting the result never exceeds `maxLength` for lengths 0…8.\n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "YuriNachos",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1501,
+    "title": "Fix Throttler delaying the first invocation by minimumDelay",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1501",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-09T01:34:06Z",
+    "updated_at": "2026-08-10T08:42:05Z",
+    "closed_at": "2026-08-10T05:00:49Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "# Fix Throttler delaying the first invocation by minimumDelay\n\n`Throttler` delayed the very first invocation by the full `minimumDelay` instead of\nfiring it immediately. Every call — including the first — waited the whole delay, so the\nthrottled action always lagged on first use.\n\n## Steps to reproduce\n\n1. `Throttler` is used by `History` to throttle search-as-you-type (`History.swift`, `Throttler(minimumDelay: 0.2)`).\n2. On the first keystroke the time since the previous run is effectively infinite (`previousRun` starts at `Date.distantPast`), so the search should run immediately.\n3. Instead the first search result always lags by the full `0.2s`.\n\n## Root cause\n\n`Maccy/Throttler.swift:31` measured elapsed time in the wrong direction:\n\n```swift\n// before — previousRun.timeIntervalSinceNow == (previousRun - now), always negative\nlet delay = previousRun.timeIntervalSinceNow > minimumDelay ? 0 : minimumDelay\n```\n\n`previousRun.timeIntervalSinceNow` is `previousRun − now`, a **negative** number (the previous\nrun is in the past, or `Date.distantPast` initially). Comparing `negative > minimumDelay` is\nalways `false`, so `delay` was always `minimumDelay` and the action never fired immediately —\ncontradicting the method's own comments (\"If the time since the previous run is more than the\nrequired minimum delay => execute the workItem immediately\").\n\n## Fix is\n\n```swift\nlet delay = Date().timeIntervalSince(previousRun) > minimumDelay ? 0 : minimumDelay\n```\n\nMeasure elapsed time since the previous run as `now − previousRun` (positive). On the first call\n(`distantPast`) the value is enormous → `delay = 0` (immediate); a call within `minimumDelay` →\n`delay = minimumDelay` (deferred). Based on the original craftappco throttler, which negates the\nsame expression (`-previousRun.timeIntervalSinceNow`); the negation was dropped here.\n\n## Regression test\n\n`MaccyTests/ThrottlerTests.swift`:\n\n- `testFirstInvocationFiresImmediately` — the first call must fire within `minimumDelay / 2`.\n  **Failed (RED)** against the old line (the block fired at ~`minimumDelay`, exceeding the 0.15s\n  wait, 3 retries); **passes (GREEN, ~0.001s)** after the fix.\n- `testSubsequentInvocationWithinMinimumDelayIsDeferred` — a second call made within\n  `minimumDelay` of the previous run is deferred by ~`minimumDelay`.\n- `testInvocationAfterMinimumDelayFiresImmediately` — a call made after `minimumDelay` has elapsed\n  fires immediately again (the repeat-caller immediate path). Also **RED** on the old line, **GREEN**\n  after the fix.\n\n## Verification (macOS, ad-hoc signing `CODE_SIGNING_ALLOWED=NO`)\n\n- `xcodebuild test -only-testing:MaccyTests` → 81 tests. The only failures are the pre-existing,\n  host-specific `ClipboardTests/testIgnoreApplication` and `ClipboardTests/testIgnoreAllApplicationsExcept`\n  (hardcoded `// Finder is on Bitrise`, fail off-Bitrise) — unchanged by this PR.\n- `swiftlint lint --strict` on touched files → 0 violations.\n\n## Diff\n\n`Maccy/Throttler.swift` (1 line) + `MaccyTests/ThrottlerTests.swift` (new) + project wiring.\n",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "YuriNachos",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1434,
+    "title": "Fix history fast-scroll freeze",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1434",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-06-25T06:36:05Z",
+    "updated_at": "2026-08-10T05:35:02Z",
+    "closed_at": "2026-08-10T05:35:02Z",
+    "merged_at": null,
+    "draft": true,
+    "body": "## Summary\n\nFix a main-thread freeze that can happen when scrolling quickly through a long history list, especially near the bottom of the popup.\n\nThe hang I reproduced was in SwiftUI list layout placement while the popup was also measuring the full scroll content height and image rows were changing size as thumbnails arrived.\n\n## Changes\n\n- Replace the scroll-content `GeometryReader` measurement with deterministic height calculation from row heights.\n- Use stable row identity in `MultipleSelectionListView` and remove row-local `.id(...)` churn.\n- Give image rows a fixed reserved height so thumbnail generation does not resize rows during fast scrolling.\n- Generate thumbnails/previews off the main actor and cancel pending thumbnail work when rows disappear.\n- Avoid loading universal-clipboard file URL image data for list thumbnails, which also avoids file-access prompts from row rendering.\n- Keep `HistoryItemDecorator` hashing stable by hashing only its identity.\n\n## Validation\n\n- `git diff --check`\n- `xcodebuild test -scheme Maccy -only-testing:MaccyTests/HistoryItemDecoratorTests -destination 'platform=macOS,arch=arm64' -derivedDataPath .tmp/DerivedData-FastScrollPR-Decorator CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=`\n- `xcodebuild -scheme Maccy -configuration Release -derivedDataPath .tmp/DerivedData-FastScrollPR-Release -destination 'generic/platform=macOS' CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= build`\n- `codesign --verify --deep --strict --verbose=4 .tmp/DerivedData-FastScrollPR-Release/Build/Products/Release/Maccy.app`\n- Manual/runtime validation: fast-scrolled a long history list to the bottom and back; post-scroll sample showed the main thread idle in the event loop rather than stuck in SwiftUI lazy-stack layout.\n",
+    "author_association": "NONE",
+    "user": {
+      "login": "p3ngu1nx",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1499,
+    "title": "Highlight search matches past the 500-character row prefix",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1499",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-08T19:10:34Z",
+    "updated_at": "2026-08-10T05:30:25Z",
+    "closed_at": "2026-08-10T05:30:24Z",
+    "merged_at": null,
+    "draft": false,
+    "body": "`highlight(_:ranges:)` built the attributed string from a 500-char prefix (`title.shortened(to: 500)`), but the search ranges index the FULL `item.title` (capped at 1000 by generateTitle). For a 500–1000-char item whose first match falls in chars 500–1000, the range is out of bounds for the 500-char string, the AttributedString.Index failable init returns nil, the guard drops it, and the match renders with no highlight — plus the searched row is truncated to 500.\n\n## Fix\nBuild the attributed string from `title` directly (already capped at 1000, so render cost stays bounded; every search range becomes valid; the searched row no longer truncates).\n\n## Test plan\nNew `testHighlightMatchBeyondFiveHundredChars` in HistoryDecoratorTests: 600×\"a\"+\"needle\" title; before the fix attributedTitle is 500 chars with no bold; after it's the full 606 chars with the bold needle. (Existing ClipboardTests host-env reds and the pre-existing is_disjoint lint red on master are unchanged.)",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "YuriNachos",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1504,
+    "title": "Translations update from Hosted Weblate",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1504",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-10T05:23:44Z",
+    "updated_at": "2026-08-10T05:27:14Z",
+    "closed_at": "2026-08-10T05:27:14Z",
+    "merged_at": "2026-08-10T05:27:14Z",
+    "draft": false,
+    "body": "Translations update from [Hosted Weblate](https://hosted.weblate.org) for [Maccy/Settings / General](https://hosted.weblate.org/projects/maccy/settings-general/).\n\n\n\nCurrent translation status:\n\n![Weblate translation status](https://hosted.weblate.org/widget/maccy/settings-general/matrix-auto.svg)",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "weblate",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  },
+  {
+    "number": 1503,
+    "title": "Translations update from Hosted Weblate",
+    "html_url": "https://github.com/p0deje/Maccy/pull/1503",
+    "state": "closed",
+    "locked": false,
+    "created_at": "2026-08-10T05:23:33Z",
+    "updated_at": "2026-08-10T05:26:57Z",
+    "closed_at": "2026-08-10T05:26:56Z",
+    "merged_at": "2026-08-10T05:26:56Z",
+    "draft": false,
+    "body": "Translations update from [Hosted Weblate](https://hosted.weblate.org) for [Maccy/Main Popup](https://hosted.weblate.org/projects/maccy/app/).\n\n\n\nCurrent translation status:\n\n![Weblate translation status](https://hosted.weblate.org/widget/maccy/app/matrix-auto.svg)",
+    "author_association": "CONTRIBUTOR",
+    "user": {
+      "login": "weblate",
+      "type": "User"
+    },
+    "assignees": [],
+    "labels": []
+  }
+]

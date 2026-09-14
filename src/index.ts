@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 import { checkAlreadyFixed } from './checks/already-fixed.js';
 import { checkCompetingPrs } from './checks/competing-prs.js';
 import { checkIssue } from './checks/issue.js';
+import { checkMaintainerSignals } from './checks/maintainer-signals.js';
 import { checkPolicy } from './checks/policy.js';
 import { checkRepoHealth } from './checks/repo-health.js';
 import { decide } from './decide.js';
@@ -60,6 +61,7 @@ export async function canistart(target: string, options: CanistartOptions = {}):
     await checkIssue(ctx),
     await checkCompetingPrs(ctx),
     await checkAlreadyFixed(ctx),
+    await checkMaintainerSignals(ctx),
     await checkPolicy(ctx),
     await checkRepoHealth(ctx),
   ];
