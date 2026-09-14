@@ -1,0 +1,6 @@
+{
+  "path": "CONTRIBUTING.md",
+  "html_url": "https://github.com/p0deje/.github/blob/master/CONTRIBUTING.md",
+  "encoding": "utf-8",
+  "content": "# How to Contribute\n\n## Formatting\n\nFiles should be formatted with prettier.\nWe suggest using a pre-commit hook to automate this.\nFirst [install pre-commit](https://pre-commit.com/#installation),\nthen run\n\n```shell\npre-commit install\n```\n"
+}

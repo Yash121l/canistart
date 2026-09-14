@@ -1,0 +1,24 @@
+[
+  {
+    "event": "cross-referenced",
+    "commit_id": null,
+    "source": {
+      "type": "issue",
+      "issue": {
+        "number": 1538,
+        "html_url": "https://github.com/p0deje/Maccy/pull/1538",
+        "state": "closed",
+        "repository": {
+          "full_name": "p0deje/Maccy"
+        },
+        "pull_request": {
+          "merged_at": null
+        }
+      }
+    }
+  },
+  {
+    "event": "closed",
+    "commit_id": null
+  }
+]

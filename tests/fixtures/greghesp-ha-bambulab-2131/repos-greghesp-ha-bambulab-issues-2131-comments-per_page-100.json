@@ -1,23 +1,32 @@
 [
   {
     "user": {
-      "login": "Yash121l"
+      "login": "Yash121l",
+      "type": "User"
     },
     "author_association": "NONE",
-    "body": "I reproduced this with the `pushall` payload from your diagnostic against the 2.2.25 code: slot 0 comes out `state 0` (genuinely empty, its MQTT entry is just `{\"id\": \"0\"}`), slots 1 to 3 stay at the default `state 8` and get reset to Empty even though `tray_type`/`tray_info_idx`/`tray_color` are populated. Your firmware never sends a per-tray `state`, so the check added in #2023 had nothing to go on.\n\nThis is already fixed on `main` by #2105 (commit 088e8bb), which falls back to the filament metadata when `state` has never been reported. Same payload against current main gives slot 0 Empty and slots 1 to 3 Generic PLA with the right colours. That fix shipped in v2.2.26-beta5 on Sep 6 and is not in a stable release yet, which is why 2.2.25 still shows it. If you can try the beta it should confirm."
+    "body": "I reproduced this with the `pushall` payload from your diagnostic against the 2.2.25 code: slot 0 comes out `state 0` (genuinely empty, its MQTT entry is just `{\"id\": \"0\"}`), slots 1 to 3 stay at the default `state 8` and get reset to Empty even though `tray_type`/`tray_info_idx`/`tray_color` are populated. Your firmware never sends a per-tray `state`, so the check added in #2023 had nothing to go on.\n\nThis is already fixed on `main` by #2105 (commit 088e8bb), which falls back to the filament metadata when `state` has never been reported. Same payload against current main gives slot 0 Empty and slots 1 to 3 Generic PLA with the right colours. That fix shipped in v2.2.26-beta5 on Sep 6 and is not in a stable release yet, which is why 2.2.25 still shows it. If you can try the beta it should confirm.",
+    "created_at": "2026-09-12T19:02:43Z",
+    "html_url": "https://github.com/greghesp/ha-bambulab/issues/2131#issuecomment-5648030174"
   },
   {
     "user": {
-      "login": "AdrianGarside"
+      "login": "AdrianGarside",
+      "type": "User"
     },
     "author_association": "COLLABORATOR",
-    "body": "Can you please test with v2.2.26?"
+    "body": "Can you please test with v2.2.26?",
+    "created_at": "2026-09-12T22:42:29Z",
+    "html_url": "https://github.com/greghesp/ha-bambulab/issues/2131#issuecomment-5649177608"
   },
   {
     "user": {
-      "login": "Yash121l"
+      "login": "Yash121l",
+      "type": "User"
     },
     "author_association": "NONE",
-    "body": "Correction to my earlier note: v2.2.26 went stable on Sep 12 and includes #2105 (commit 088e8bb), so updating to 2.2.26 as Adrian suggests should resolve this. Nothing further needed from my side."
+    "body": "Correction to my earlier note: v2.2.26 went stable on Sep 12 and includes #2105 (commit 088e8bb), so updating to 2.2.26 as Adrian suggests should resolve this. Nothing further needed from my side.",
+    "created_at": "2026-09-13T01:46:20Z",
+    "html_url": "https://github.com/greghesp/ha-bambulab/issues/2131#issuecomment-5650032895"
   }
 ]

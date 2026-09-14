@@ -1,0 +1,20 @@
+{
+  "number": 1538,
+  "title": "Don't restore deleted item when pasteboard is re-declared",
+  "html_url": "https://github.com/p0deje/Maccy/pull/1538",
+  "state": "closed",
+  "locked": false,
+  "created_at": "2026-09-13T20:07:44Z",
+  "updated_at": "2026-09-14T18:08:27Z",
+  "closed_at": "2026-09-14T18:08:27Z",
+  "merged_at": null,
+  "draft": false,
+  "body": "Fixes #1506.\n\nMaccy treats every change to `NSPasteboard.general.changeCount` as a new copy, without checking whether the contents actually changed. Usually you never notice, because the item it builds supersedes the one already in history and `History.add` merges the two. But if you have just deleted that entry there is nothing left to merge into, so the next change count bump adds it back. Since it is whatever is currently on the clipboard, it is always the newest entry that comes back.\n\nChange counts get bumped with identical contents fairly often without the user copying anything: Universal Clipboard re-syncing, applications re-asserting their pasteboard data, lazily provided data being fulfilled. That is why this is hard to reproduce on a machine where none of those happen.\n\nWhat changed:\n\n- `HistoryItem` can describe itself by a signature of its meaningful contents, reusing the existing `transientTypes` list so the types that only say where a copy came from are left out.\n- `Clipboard` remembers the signature of the contents it last recorded together with the change count it came from. When an item is deleted, `History` tells `Clipboard` about it. If that item is exactly what is on the pasteboard at that moment, `Clipboard` ignores further changes carrying the same contents until something else is copied.\n\nDeleting an entry that is no longer on the clipboard is unaffected, and copying it again later still adds it back.\n\nVerified with two tests in `MaccyTests/ClipboardTests.swift`: one fails on master and passes with the fix, the other pins down that a deleted entry which is not on the pasteboard is still added again when it is copied. The rest of `MaccyTests` is unchanged. `testIgnoreApplication` and `testIgnoreAllApplicationsExcept` already fail on master here because they expect Xcode or Finder to be the frontmost application. SwiftLint reports no new violations.\n",
+  "author_association": "NONE",
+  "user": {
+    "login": "Yash121l",
+    "type": "User"
+  },
+  "assignees": [],
+  "labels": []
+}

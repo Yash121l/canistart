@@ -72,7 +72,7 @@ describe('canistart binary', () => {
     expect(result.stdout.split('\n')[0]).toBe(
       'STOP  cline/cline#4932  [Accessibility] Screen reader users can\'t determine if they are in plan or act mode',
     );
-    expect(result.stdout).toMatch(/\[ x\] competing_prs 5 open pull requests already target this issue\./);
+    expect(result.stdout).toMatch(/\[ x\] competing_prs {6}5 open pull requests already target this issue\./);
     expect(result.stdout.split('\n').length).toBeLessThan(30);
   });
 
@@ -95,10 +95,10 @@ describe('canistart binary', () => {
       CANISTART_FIXTURE_DIR: 'tests/fixtures/greghesp-ha-bambulab-2131',
       CANISTART_NOW: '2026-09-13T12:00:00Z',
     });
-    expect(result.code).toBe(1);
+    expect(result.code).toBe(2);
     const parsed = JSON.parse(result.stdout) as Record<string, unknown>;
-    expect(parsed['verdict']).toBe('CAUTION');
-    expect(parsed['exit_code']).toBe(1);
+    expect(parsed['verdict']).toBe('STOP');
+    expect(parsed['exit_code']).toBe(2);
     expect(parsed['generated_at']).toBe('2026-09-13T12:00:00.000Z');
     expect(parsed['canistart_version']).toMatch(/^\d+\.\d+\.\d+$/);
     expect(parsed['issue']).toMatchObject({ owner: 'greghesp', repo: 'ha-bambulab', number: 2131 });
@@ -106,6 +106,7 @@ describe('canistart binary', () => {
       'issue',
       'competing_prs',
       'already_fixed',
+      'maintainer_signals',
       'policy',
       'repo_health',
     ]);

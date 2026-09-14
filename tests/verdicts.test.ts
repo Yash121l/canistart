@@ -54,8 +54,29 @@ describe('recorded issues', () => {
     await expect(verdict('sqlalchemy/sqlalchemy#13583')).resolves.toBe('STOP');
   });
 
-  it('cautions on greghesp/ha-bambulab#2131, where the thread points at a merged fix', async () => {
-    await expect(verdict('greghesp/ha-bambulab#2131')).resolves.toBe('CAUTION');
+  it('stops on greghesp/ha-bambulab#2131, where a collaborator asked the reporter to try a newer release', async () => {
+    await expect(verdict('greghesp/ha-bambulab#2131')).resolves.toBe('STOP');
+  });
+
+  it('reads the collaborator comment on greghesp/ha-bambulab#2131 as a fix elsewhere', async () => {
+    const result = await canistart('greghesp/ha-bambulab#2131', {
+      client: new FixtureGitHubClient('tests/fixtures/greghesp-ha-bambulab-2131'),
+      now: NOW,
+    });
+    const signals = result.checks.find((c) => c.id === 'maintainer_signals');
+    expect(signals?.status).toBe('fail');
+    expect(signals?.summary).toBe('maintainer said fixed elsewhere: "Can you please test with v2.2.26?"');
+    expect(signals?.evidence[0]?.url).toContain('#issuecomment-');
+  });
+
+  it('reads the owner comment on p0deje/Maccy#1506 as a failed reproduction', async () => {
+    const result = await canistart('p0deje/Maccy#1506', {
+      client: new FixtureGitHubClient('tests/fixtures/p0deje-Maccy-1506'),
+      now: NOW,
+    });
+    const signals = result.checks.find((c) => c.id === 'maintainer_signals');
+    expect(signals?.status).toBe('warn');
+    expect(signals?.summary).toMatch(/maintainer said they cannot reproduce it: "Please provide a screen recording/);
   });
 
   it('cautions on python-jsonschema/jsonschema#1218, open for over two years', async () => {

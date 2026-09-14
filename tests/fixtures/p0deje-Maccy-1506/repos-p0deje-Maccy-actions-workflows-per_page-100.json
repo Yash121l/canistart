@@ -1,0 +1,19 @@
+{
+  "workflows": [
+    {
+      "name": "Copilot",
+      "path": "dynamic/agents/copilot-pull-request-reviewer",
+      "html_url": "https://github.com/p0deje/Maccy/actions/workflows/agents/copilot-pull-request-reviewer"
+    },
+    {
+      "name": "Copilot code review",
+      "path": "dynamic/copilot-pull-request-reviewer/copilot-pull-request-reviewer",
+      "html_url": "https://github.com/p0deje/Maccy/actions/workflows/copilot-pull-request-reviewer/copilot-pull-request-reviewer"
+    },
+    {
+      "name": "pages-build-deployment",
+      "path": "dynamic/pages/pages-build-deployment",
+      "html_url": "https://github.com/p0deje/Maccy/actions/workflows/pages/pages-build-deployment"
+    }
+  ]
+}

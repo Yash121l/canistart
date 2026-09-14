@@ -10,6 +10,7 @@ const run = promisify(execFile);
 const TARGETS = [
   'cline/cline#4932',
   'greghesp/ha-bambulab#2131',
+  'p0deje/Maccy#1506',
   'litestar-org/litestar#2595',
   'meriyah/meriyah#650',
   'python-jsonschema/jsonschema#1218',
@@ -20,7 +21,7 @@ const TARGETS = [
 const pick = (source, keys) =>
   Object.fromEntries(keys.filter((key) => source?.[key] !== undefined).map((key) => [key, source[key]]));
 
-const user = (value) => (value ? { login: value.login } : value);
+const user = (value) => (value ? { login: value.login, ...(value.type ? { type: value.type } : {}) } : value);
 
 const issue = (value) => ({
   ...pick(value, [
@@ -70,7 +71,15 @@ function trim(path, body) {
           : {}),
       }));
   }
-  if (path.endsWith('/comments')) return body.map((c) => ({ user: user(c.user), author_association: c.author_association, body: c.body }));
+  if (path.endsWith('/comments')) {
+    return body.map((c) => ({
+      user: user(c.user),
+      author_association: c.author_association,
+      body: c.body,
+      created_at: c.created_at,
+      html_url: c.html_url,
+    }));
+  }
   if (path.endsWith('/reviews')) return body.map((r) => ({ user: user(r.user), state: r.state, submitted_at: r.submitted_at }));
   if (/\/commits\/[0-9a-f]+$/.test(path)) return { sha: body.sha, html_url: body.html_url };
   if (/^repos\/[^/]+\/[^/]+$/.test(path)) {
