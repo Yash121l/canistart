@@ -11,7 +11,7 @@ import { join } from 'node:path';
 // Public client key for the maintainer's PostHog project. It can only write events.
 const POSTHOG_KEY = 'phc_oLm8fb7L4CXDqGdJcc7a6boCtR8rVjf6dNx7G995eGdy';
 const ENDPOINT = 'https://us.i.posthog.com/i/v0/e/';
-const TIMEOUT_MS = 3000;
+const TIMEOUT_MS = 8000;
 
 // Runs in a detached child process so the CLI exits without waiting on the network.
 const SENDER = `fetch(${JSON.stringify(ENDPOINT)}, { method: 'POST', headers: { 'content-type': 'application/json' }, body: process.env.CANISTART_TELEMETRY_PAYLOAD, signal: AbortSignal.timeout(${TIMEOUT_MS}) }).catch(() => {})`;
