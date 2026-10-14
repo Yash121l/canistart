@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- The CLI sends one anonymous usage event per run (command kind, version, OS, duration,
+  exit code). No issue URLs, repository names, tokens or results. Off in CI; opt out with
+  `CANISTART_TELEMETRY=0` or `DO_NOT_TRACK=1`. See the README.
+
 ## 0.2.0
 
 - New check `maintainer_signals` reads the issue comments. A maintainer saying the thing

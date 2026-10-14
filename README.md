@@ -153,6 +153,24 @@ canistart <issue-url | owner/repo#number> [options]
 Without a token it uses the anonymous limit of sixty requests an hour, which one run can
 exhaust. It says so in the output when that happens.
 
+## Telemetry
+
+The `canistart` command sends one anonymous event per run so I can see which versions and
+platforms are in use and how often runs fail. It sends the command kind (check, help,
+version), whether `--json` and `--agent` were passed, the canistart version, OS, CPU
+architecture, Node version, duration and exit code, keyed by a random id stored in
+`~/.config/canistart/telemetry.json`. It never sends issue URLs, repository names,
+tokens, option values or results. The first run prints a notice.
+
+The event goes to PostHog from a detached background process with a three-second timeout,
+so it never slows down or blocks the command. It is off in CI (`CI` set) and when the
+library is imported. Turn it off with either of:
+
+```sh
+export CANISTART_TELEMETRY=0
+export DO_NOT_TRACK=1
+```
+
 ## Library
 
 ```ts
